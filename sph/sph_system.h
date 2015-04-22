@@ -24,6 +24,8 @@
 
 #include "sph_type.h"
 
+enum Status {LIQUID,SOLID};
+
 class Particle
 {
 public:
@@ -39,6 +41,7 @@ public:
 	float surf_norm;
 
 	Particle *next;
+	Status state;
 };
 
 class SPHSystem
@@ -54,6 +57,10 @@ public:
 	float cell_size;
 	uint3 grid_size;
 	uint tot_cell;
+
+
+	float3 IceForce_fluid;
+	float3 IceForce_rigid;
 
 	float3 gravity;
 	float wall_damping;

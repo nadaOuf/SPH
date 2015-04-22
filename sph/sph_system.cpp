@@ -40,7 +40,7 @@ SPHSystem::SPHSystem()
 	tot_cell=grid_size.x*grid_size.y*grid_size.z;
 
 	gravity.x=0.0f; 
-	gravity.y=-6.8f;
+	gravity.y=-9.8f;
 	gravity.z=0.0f;
 	wall_damping=-0.5f;
 	rest_density=1000.0f;
@@ -93,7 +93,6 @@ void SPHSystem::animation()
 	{
 		return;
 	}
-
 	build_table();
 	comp_dens_pres();
 	comp_force_adv();
@@ -109,11 +108,11 @@ void SPHSystem::init_system()
 	vel.y=0.0f;
 	vel.z=0.0f;
 
-	for(pos.x=world_size.x*0.0f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
+	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
 	{
-		for(pos.y=world_size.y*0.0f; pos.y<world_size.y*0.9f; pos.y+=(kernel*0.5f))
+		for(pos.y=world_size.y*0.3f; pos.y<world_size.y*0.9f; pos.y+=(kernel*0.5f))
 		{
-			for(pos.z=world_size.z*0.0f; pos.z<world_size.z*0.6f; pos.z+=(kernel*0.5f))
+			for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.6f; pos.z+=(kernel*0.5f))
 			{
 				add_particle(pos, vel);
 			}
@@ -143,6 +142,7 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 	p->pres=0.0f;
 
 	p->next=NULL;
+	p->state = SOLID;
 
 	num_particle++;
 }
@@ -240,6 +240,14 @@ void SPHSystem::comp_dens_pres()
 
 void SPHSystem::comp_force_adv()
 {
+	IceForce_fluid.x = 0;
+	IceForce_fluid.y = 0;
+	IceForce_fluid.z = 0;
+
+	IceForce_rigid.x = 0;
+	IceForce_rigid.y = 0;
+	IceForce_rigid.z = 0;
+
 	Particle *p;
 	Particle *np;
 
@@ -262,20 +270,31 @@ void SPHSystem::comp_force_adv()
 	float3 grad_color;
 	float lplc_color;
 
+	Status pState;
+
 	for(uint i=0; i<num_particle; i++)
 	{
 		p=&(mem[i]); 
 		cell_pos=calc_cell_pos(p->pos);
 
+		pState = p->state;
+
 		p->acc.x=0.0f;
 		p->acc.y=0.0f;
 		p->acc.z=0.0f;
-
+		if(pState==SOLID)
+		{
+			//Boundary Checking.
+			//!!!___other faces later.
+			if(p->pos.y < 0.0f)
+				IceForce_rigid.y = -gravity.y - p->vel.y*1.65/time_step;
+			continue;
+		}
 		grad_color.x=0.0f;
 		grad_color.y=0.0f;
 		grad_color.z=0.0f;
 		lplc_color=0.0f;
-		
+
 		for(int x=-1; x<=1; x++)
 		{
 			for(int y=-1; y<=1; y++)
@@ -288,13 +307,18 @@ void SPHSystem::comp_force_adv()
 					hash=calc_cell_hash(near_pos);
 
 					if(hash == 0xffffffff)
-					{
+					{//no neighbor particles, check boundary/rigid
 						continue;
 					}
-
 					np=cell[hash];
 					while(np != NULL)
 					{
+						if(pState=SOLID)
+						{
+							np = np->next;
+							continue;
+						}
+						//rel_pos = p_pos - np_pos
 						rel_pos.x=p->pos.x-np->pos.x;
 						rel_pos.y=p->pos.y-np->pos.y;
 						rel_pos.z=p->pos.z-np->pos.z;
@@ -328,7 +352,6 @@ void SPHSystem::comp_force_adv()
 							grad_color.z += temp * rel_pos.z;
 							lplc_color += lplc_poly6 * V * (kernel_2-r2) * (r2-3/4*(kernel_2-r2));
 						}
-
 						np=np->next;
 					}
 				}
@@ -353,7 +376,13 @@ void SPHSystem::advection()
 	for(uint i=0; i<num_particle; i++)
 	{
 		p=&(mem[i]);
+		if(p->state == SOLID)
+		{
+			p->acc.x = 0;
+			p->acc.y = IceForce_rigid.y*p->dens;
+			p->acc.z = 0;
 
+		}
 		p->vel.x=p->vel.x+p->acc.x*time_step/p->dens+gravity.x*time_step;
 		p->vel.y=p->vel.y+p->acc.y*time_step/p->dens+gravity.y*time_step;
 		p->vel.z=p->vel.z+p->acc.z*time_step/p->dens+gravity.z*time_step;
@@ -361,6 +390,8 @@ void SPHSystem::advection()
 		p->pos.x=p->pos.x+p->vel.x*time_step;
 		p->pos.y=p->pos.y+p->vel.y*time_step;
 		p->pos.z=p->pos.z+p->vel.z*time_step;
+
+		if(p->state == SOLID) continue;
 
 		if(p->pos.x >= world_size.x-BOUNDARY)
 		{

@@ -199,7 +199,7 @@ void init_ratio()
 
 void render_particles()
 {
-	glPointSize(1.0f);
+	glPointSize(4.0f);
 	glColor3f(0.0f, 0.0f, 1.0f);
 
 	for(uint i=0; i<sph->num_particle; i++)

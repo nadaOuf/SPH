@@ -12,5 +12,5 @@ void main()
     // calculate lighting
     float diffuse = max(0.0, dot(lightDir, N));
 
-    gl_FragColor = vec3(0.577, 0.577, 0.577);//gl_Color * diffuse;
+    gl_FragColor = diffuse;//gl_Color * diffuse;
 }
