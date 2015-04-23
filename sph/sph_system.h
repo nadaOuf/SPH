@@ -45,6 +45,7 @@ public:
 	float3 particle_color;
 	///////////////////////////////////////////////
 	Particle *next;
+	void CalcParticleColor();
 	//Status state;
 };
 
@@ -106,6 +107,7 @@ private:
 	void HeatAdvect(Particle *p);
 	void SetColor();
 	void HeatTransfer();
+
 private:
 	int3 calc_cell_pos(float3 p);
 	uint calc_cell_hash(int3 cell_pos);

@@ -144,7 +144,12 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 
 	p->next=NULL;
 	p->state = SOLID;
+	p->particle_color.x = 255;
+	p->particle_color.y = 0;
+	p->particle_color.z = 0;
 
+	p->temp = 300;
+	//p->CalcParticleColor();
 	num_particle++;
 }
 
@@ -510,4 +515,37 @@ uint SPHSystem::calc_cell_hash(int3 cell_pos)
 	cell_pos.z = cell_pos.z & (grid_size.z-1);  
 
 	return ((uint)(cell_pos.z))*grid_size.y*grid_size.x + ((uint)(cell_pos.y))*grid_size.x + (uint)(cell_pos.x);
+}
+void Particle::CalcParticleColor()
+{
+	float dv = MAX_T - MIN_T;
+	float3 RGB;
+	RGB.x = 1;
+	RGB.y = 1;
+	RGB.z = 1;
+
+	if (temp < MIN_T) temp = MIN_T;
+	if (temp > MAX_T) temp = MAX_T;
+	
+	if (temp < (MIN_T + 0.25 * dv)) {
+		RGB.x = 0;
+		RGB.y = 4 * (temp - MIN_T) / dv;
+	} else if (temp < (MIN_T + 0.5 * dv)) 
+	{
+		RGB.x = 0.0;
+        RGB.z = 1.0 + 4.0 * (MIN_T + 0.25 * dv - temp) / dv;
+	} else if (temp < (MIN_T + 0.75 * dv))
+	{
+		RGB.x = 4.0 * (temp - MIN_T - 0.5 * dv) / dv;
+        RGB.z = 0.0;
+	} else {
+		RGB.y = 1.0 + 4.0 * (MIN_T + 0.75 * dv - temp) / dv;
+		RGB.z = 0.0;
+	}
+	RGB.x*=255;
+	RGB.y*=255;
+	RGB.z*=255;
+	particle_color.x = RGB.x;
+	particle_color.y = RGB.y;
+	particle_color.z = RGB.z;
 }
