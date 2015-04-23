@@ -448,6 +448,7 @@ void SPHSystem::HeatTransfer(){
 		for(uint i=0; i<num_particle; i++)
 	{
 		pi=&(mem[i]);
+		pj=&(mem[j]);
 		distx = pj->pos.x - pi->pos.x;
 	    disty = pj->pos.y - pi->pos.y;
 	    distz = pj->pos.z - pi->pos.z;
@@ -459,7 +460,7 @@ void SPHSystem::HeatTransfer(){
 	        if(pj->state==RIGID)cd = THERMAL_CONDUCTIVITY;
 	        float smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
 			temp_neighborEffect=cd*mass*(pj->temp-pi->temp)/pj->dens;
-			pi->temp_eval=temp_neighborEffect;
+			pi->temp_eval+=temp_neighborEffect;
 		}
 	}
 }
@@ -470,7 +471,7 @@ void SPHSystem::HeatTransfer(){
 	
 
 }*/
-void SPHSystem::SetColor(){
+//void SPHSystem::_SetColor(){
 	/*Particle *p;
 	for(uint i=0; i<num_particle; i++)
 	{
@@ -486,7 +487,7 @@ void SPHSystem::SetColor(){
 	       p->particle_color.z=p->temp/(MAX_T-ICE_T);
         }
 	}*/
-}
+//}
 int3 SPHSystem::calc_cell_pos(float3 p)
 {
 	int3 cell_pos;
