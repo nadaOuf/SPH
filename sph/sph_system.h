@@ -105,6 +105,8 @@ private:
 	void advection();
 	void HeatAdvect(Particle *p);
 	void HeatTransfer(Particle *pi,Particle *pj);
+	float HeatTransferAir(Particle *p, float dA);
+
 private:
 	int3 calc_cell_pos(float3 p);
 	uint calc_cell_hash(int3 cell_pos);

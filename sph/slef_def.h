@@ -4,4 +4,6 @@ enum Status { SOLID, LIQUID,RIGID};
 static const float THERMAL_CONDUCTIVITY_ICE = 0.00267;//2.18;// in watts per meter kelvin
 static const float THERMAL_CONDUCTIVITY_WATER = 0.00267;//0.58;// in watts perr meter kelvin
 static const float THERMAL_CONDUCTIVITY = 0.00267; //IUDN
+static const float THERMAL_CONDUCTIVITY_AIR = 0.0454; //Thermal conductivity of air when it at 300 kelvin
 static const float R_HEATAFFECT = 1.1;
+static const float T_air = 300; //in kelvin
