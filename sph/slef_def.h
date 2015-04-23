@@ -7,3 +7,5 @@ static const float THERMAL_CONDUCTIVITY = 0.00267; //IUDN
 static const float THERMAL_CONDUCTIVITY_AIR = 0.0454; //Thermal conductivity of air when it at 300 kelvin
 static const float R_HEATAFFECT = 1.1;
 static const float T_air = 300; //in kelvin
+static const float K_WATER = 1.0; //the coefficient of interfacial tension between the water particles
+static const float K_ICE = 20.0; //the coefficient of interfacial tension between water-ice particles
