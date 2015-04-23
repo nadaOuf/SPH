@@ -107,6 +107,7 @@ private:
 	void HeatAdvect(Particle *p);
 	void SetColor();
 	void HeatTransfer();
+	float HeatTransferAir(Particle *p, float dA);
 
 private:
 	int3 calc_cell_pos(float3 p);

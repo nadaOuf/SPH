@@ -277,9 +277,10 @@ void SPHSystem::comp_force_adv()
 	float lplc_color;
 
 	Status pState;
-
+	float ni = 0.0f;
 	for(uint i=0; i<num_particle; i++)
 	{
+		ni = 0.0f;
 		p=&(mem[i]); 
 		cell_pos=calc_cell_pos(p->pos);
 
@@ -316,6 +317,7 @@ void SPHSystem::comp_force_adv()
 					{//no neighbor particles, check boundary/rigid
 						continue;
 					}
+					++ni; //sum the number of particles surrounding
 					np=cell[hash];
 					while(np != NULL)
 					{
@@ -363,6 +365,11 @@ void SPHSystem::comp_force_adv()
 				}
 			}
 		}
+		float dA = (6 - ni) / 6;
+		if(ni > 6) 
+			dA = 0.0f;
+		//Add the heat transfer due to air 
+		p->temp += HeatTransferAir(p, dA);
 
 		lplc_color+=self_lplc_color/p->dens;
 		p->surf_norm=sqrt(grad_color.x*grad_color.x+grad_color.y*grad_color.y+grad_color.z*grad_color.z);
@@ -439,6 +446,25 @@ void SPHSystem::advection()
 		p->ev.y=(p->ev.y+p->vel.y)/2;
 		p->ev.z=(p->ev.z+p->vel.z)/2;
 	}
+}
+
+float SPHSystem::HeatTransferAir(Particle *p, float dA)
+{
+	//First calculate Q
+	float Q = 0.0f, cd = 0.0f;
+	Q = THERMAL_CONDUCTIVITY_AIR * (T_air - p->temp) * dA;
+
+	//Determining the thermal conductivity of the particle depending on its state
+	if(p->state==LIQUID)
+		cd = THERMAL_CONDUCTIVITY_WATER;
+	if(p->state==SOLID)
+		cd = THERMAL_CONDUCTIVITY_ICE;
+	if(p->state==RIGID)
+		cd = THERMAL_CONDUCTIVITY;
+
+	//return the temprature change due to air
+	return Q/(cd*mass);
+
 }
 void SPHSystem::HeatTransfer(){
 	///////////////////////////from neightbor////////////////////////
