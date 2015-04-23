@@ -11,4 +11,7 @@ static const float R_HEATAFFECT = 1.1;
 static const float MIN_T = 253;
 static const float MAX_T = 373;
 static const float ICE_T = 273;
+static const float THERMAL_CONDUCTIVITY_AIR = 0.0454; //Thermal conductivity of air when it at 300 kelvin
+static const float T_air = 300; //in kelvin
+
 #endif
