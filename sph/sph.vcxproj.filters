@@ -53,6 +53,9 @@
     <ClInclude Include="glew\wglew.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="slef_def.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\shader.fs" />

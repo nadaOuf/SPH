@@ -434,7 +434,32 @@ void SPHSystem::advection()
 		p->ev.z=(p->ev.z+p->vel.z)/2;
 	}
 }
-
+void SPHSystem::HeatTransfer(Particle *pi,Particle *pj){
+	///////////////////////////from neightbor////////////////////////
+	float temp_neighborEffect;
+	float distx = pj->pos.x - pi->pos.x;
+	float disty = pj->pos.y - pi->pos.y;
+	float distz = pj->pos.z - pi->pos.z;
+	float rij  = sqrt(pow(distx,2)+pow(disty,2)+pow(distz,2));
+	float cd;
+	if(pj->state==LIQUID)cd=THERMAL_CONDUCTIVITY_WATER;
+	if(pj->state==SOLID)cd=THERMAL_CONDUCTIVITY_ICE;
+	if(pj->state==RIGID)cd=THERMAL_CONDUCTIVITY;
+	float smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
+	temp_neighborEffect+=cd*mass*(pj->temp-pi->temp)/pj->dens*smooth_k;
+}
+void SPHSystem::HeatAdvect(Particle *p){
+	p->temp += p->temp_eval *time_step;
+    p->temp_eval = 0.0;
+	if(p->temp<250){
+	p->particle_color.x=0.0;
+	p->particle_color.y=0.0;
+	p->particle_color.z=p->temp/250;}
+/*	if(p->temp>250){
+	p->particle_color.x=(p->temp-250)/250;
+	p->particle_color.y=0.0;
+	p->particle_color.z=0;}*/
+}
 int3 SPHSystem::calc_cell_pos(float3 p)
 {
 	int3 cell_pos;

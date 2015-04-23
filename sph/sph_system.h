@@ -39,7 +39,12 @@ public:
 	float pres;
 
 	float surf_norm;
-
+		////////////////////////***temp****///////////////////////
+	Status state;   
+	float  temp;           // melting members
+	float  temp_eval;
+	float3 particle_color;
+	///////////////////////////////////////////////
 	Particle *next;
 	Status state;
 };
@@ -99,7 +104,8 @@ private:
 	void comp_dens_pres();
 	void comp_force_adv();
 	void advection();
-
+	void HeatAdvect(Particle *p);
+	void HeatTransfer(Particle *pi,Particle *pj);
 private:
 	int3 calc_cell_pos(float3 p);
 	uint calc_cell_hash(int3 cell_pos);
