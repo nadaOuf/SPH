@@ -45,6 +45,7 @@ public:
 	float3 particle_color;
 	///////////////////////////////////////////////
 	Particle *next;
+	void CalcParticleColor();
 	//Status state;
 };
 
@@ -97,6 +98,7 @@ public:
 	void animation();
 	void init_system();
 	void add_particle(float3 pos, float3 vel);
+	
 
 private:
 	void build_table();
