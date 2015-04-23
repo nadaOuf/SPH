@@ -23,8 +23,7 @@
 #define __SPHSYSTEM_H__
 
 #include "sph_type.h"
-
-enum Status {LIQUID,SOLID};
+#include "slef_def.h"
 
 class Particle
 {
@@ -39,14 +38,14 @@ public:
 	float pres;
 
 	float surf_norm;
-		////////////////////////***temp****///////////////////////
+	////////////////////////***temp****///////////////////////
 	Status state;   
 	float  temp;           // melting members
 	float  temp_eval;
 	float3 particle_color;
 	///////////////////////////////////////////////
 	Particle *next;
-	Status state;
+	//Status state;
 };
 
 class SPHSystem

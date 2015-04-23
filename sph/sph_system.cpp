@@ -442,9 +442,9 @@ void SPHSystem::HeatTransfer(Particle *pi,Particle *pj){
 	float distz = pj->pos.z - pi->pos.z;
 	float rij  = sqrt(pow(distx,2)+pow(disty,2)+pow(distz,2));
 	float cd;
-	if(pj->state==LIQUID)cd=THERMAL_CONDUCTIVITY_WATER;
-	if(pj->state==SOLID)cd=THERMAL_CONDUCTIVITY_ICE;
-	if(pj->state==RIGID)cd=THERMAL_CONDUCTIVITY;
+	if(pj->state==LIQUID)cd = THERMAL_CONDUCTIVITY_WATER;
+	if(pj->state==SOLID)cd = THERMAL_CONDUCTIVITY_ICE;
+	if(pj->state==RIGID)cd = THERMAL_CONDUCTIVITY;
 	float smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
 	temp_neighborEffect+=cd*mass*(pj->temp-pi->temp)/pj->dens*smooth_k;
 }
