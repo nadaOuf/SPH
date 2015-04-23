@@ -21,7 +21,7 @@
 
 #include "sph_system.h"
 #include "sph_header.h"
-#include <vector>
+
 SPHSystem::SPHSystem()
 {
 	max_particle=30000;
@@ -97,7 +97,7 @@ void SPHSystem::animation()
 	comp_dens_pres();
 	comp_force_adv();
 	advection();
-	HeatTransfer();
+//	HeatTransfer();
 }
 
 void SPHSystem::init_system()
@@ -289,6 +289,12 @@ void SPHSystem::comp_force_adv()
 		p->acc.x=0.0f;
 		p->acc.y=0.0f;
 		p->acc.z=0.0f;
+/////////////////////////////add particle_heat_transfer...///////////////////////////////
+		for(uint j=0; j<num_particle; j++){
+			Particle *pj;
+			pj=&(mem[j]);
+			p->temp+=HeatTransfer_particle(p, pj);}
+		//////////////////////////////////////////////////////////////
 		if(pState==SOLID)
 		{
 			//Boundary Checking.
@@ -370,7 +376,7 @@ void SPHSystem::comp_force_adv()
 			dA = 0.0f;
 		//Add the heat transfer due to air 
 		p->temp += HeatTransferAir(p, dA);
-
+		
 		lplc_color+=self_lplc_color/p->dens;
 		p->surf_norm=sqrt(grad_color.x*grad_color.x+grad_color.y*grad_color.y+grad_color.z*grad_color.z);
 
@@ -466,6 +472,28 @@ float SPHSystem::HeatTransferAir(Particle *p, float dA)
 	return Q/(cd*mass);
 
 }
+float SPHSystem::HeatTransfer_particle(Particle *pj, Particle *pi){
+	float distx,disty,distz;
+    float rij;
+	float cd;
+	float temp_neighborEffect;
+    	distx = pj->pos.x - pi->pos.x;
+	    disty = pj->pos.y - pi->pos.y;
+	    distz = pj->pos.z - pi->pos.z;
+		rij  = sqrt(pow(distx,2)+ pow(disty,2)+ pow(distz,2));
+		if(rij<R_HEATAFFECT){
+			//tt.push_back(i);
+	        if(pj->state==LIQUID)cd = THERMAL_CONDUCTIVITY_WATER;
+	        if(pj->state==SOLID)cd = THERMAL_CONDUCTIVITY_ICE;
+	        if(pj->state==RIGID)cd = THERMAL_CONDUCTIVITY;
+	        float smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
+			temp_neighborEffect=cd*mass*(pj->temp-pi->temp)/pj->dens;
+			//pi->temp_eval+=temp_neighborEffect;
+			return temp_neighborEffect;
+
+}
+}
+		/*
 void SPHSystem::HeatTransfer(){
 	///////////////////////////from neightbor////////////////////////
 	Particle *pi,*pj;//R_HEATAFFECT
@@ -494,7 +522,7 @@ void SPHSystem::HeatTransfer(){
 			pi->temp_eval+=temp_neighborEffect;
 		}
 	}
-}
+}*/
 /*void SPHSystem::HeatAdvect(Particle *p){
 	Particle *p;
 	//p->temp += p->temp_eval *time_step;

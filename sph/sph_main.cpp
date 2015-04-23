@@ -23,12 +23,12 @@
 #include "sph_data.h"
 #include "sph_timer.h"
 #include "sph_system.h"
-#include <GL\glew.h>
-#include "GL\glut.h"
+#include  <GL\glew.h>
+#include  <GL\glut.h>
 #include "slef_def.h"
-//#include <GL\glut.h>
-//#include "glut\glut.h"
-#pragma comment(lib, "glew32.lib") 
+
+
+//#pragma comment(lib, "glew32.lib") 
 
 SPHSystem *sph;
 

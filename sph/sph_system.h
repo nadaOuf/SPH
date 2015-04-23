@@ -106,7 +106,8 @@ private:
 	void advection();
 	void HeatAdvect(Particle *p);
 	void SetColor();
-	void HeatTransfer();
+	float HeatTransfer_particle(Particle *pi, Particle *pj);
+	//void HeatTransfer();
 	float HeatTransferAir(Particle *p, float dA);
 
 private:
