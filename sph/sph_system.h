@@ -104,7 +104,8 @@ private:
 	void comp_force_adv();
 	void advection();
 	void HeatAdvect(Particle *p);
-	void HeatTransfer(Particle *pi,Particle *pj);
+	void SetColor();
+	void HeatTransfer();
 private:
 	int3 calc_cell_pos(float3 p);
 	uint calc_cell_hash(int3 cell_pos);

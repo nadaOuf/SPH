@@ -5,3 +5,6 @@ static const float THERMAL_CONDUCTIVITY_ICE = 0.00267;//2.18;// in watts per met
 static const float THERMAL_CONDUCTIVITY_WATER = 0.00267;//0.58;// in watts perr meter kelvin
 static const float THERMAL_CONDUCTIVITY = 0.00267; //IUDN
 static const float R_HEATAFFECT = 1.1;
+static const float MIN_T = 253;
+static const float MAX_T = 373;
+static const float ICE_T = 273;

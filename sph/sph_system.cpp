@@ -21,7 +21,7 @@
 
 #include "sph_system.h"
 #include "sph_header.h"
-
+#include <vector>
 SPHSystem::SPHSystem()
 {
 	max_particle=30000;
@@ -97,6 +97,7 @@ void SPHSystem::animation()
 	comp_dens_pres();
 	comp_force_adv();
 	advection();
+	HeatTransfer();
 }
 
 void SPHSystem::init_system()
@@ -434,31 +435,57 @@ void SPHSystem::advection()
 		p->ev.z=(p->ev.z+p->vel.z)/2;
 	}
 }
-void SPHSystem::HeatTransfer(Particle *pi,Particle *pj){
+void SPHSystem::HeatTransfer(){
 	///////////////////////////from neightbor////////////////////////
-	float temp_neighborEffect;
-	float distx = pj->pos.x - pi->pos.x;
-	float disty = pj->pos.y - pi->pos.y;
-	float distz = pj->pos.z - pi->pos.z;
-	float rij  = sqrt(pow(distx,2)+pow(disty,2)+pow(distz,2));
+	Particle *pi,*pj;//R_HEATAFFECT
+	float distx,disty,distz;
+    float rij;
 	float cd;
-	if(pj->state==LIQUID)cd = THERMAL_CONDUCTIVITY_WATER;
-	if(pj->state==SOLID)cd = THERMAL_CONDUCTIVITY_ICE;
-	if(pj->state==RIGID)cd = THERMAL_CONDUCTIVITY;
-	float smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
-	temp_neighborEffect+=cd*mass*(pj->temp-pi->temp)/pj->dens*smooth_k;
+	//float
+	//vector<float>tt;
+	float temp_neighborEffect;
+	for(uint j=0; j<num_particle; j++)
+		for(uint i=0; i<num_particle; i++)
+	{
+		pi=&(mem[i]);
+		distx = pj->pos.x - pi->pos.x;
+	    disty = pj->pos.y - pi->pos.y;
+	    distz = pj->pos.z - pi->pos.z;
+		rij  = sqrt(pow(distx,2)+ pow(disty,2)+ pow(distz,2));
+		if(rij<R_HEATAFFECT){
+			//tt.push_back(i);
+	        if(pj->state==LIQUID)cd = THERMAL_CONDUCTIVITY_WATER;
+	        if(pj->state==SOLID)cd = THERMAL_CONDUCTIVITY_ICE;
+	        if(pj->state==RIGID)cd = THERMAL_CONDUCTIVITY;
+	        float smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
+			temp_neighborEffect=cd*mass*(pj->temp-pi->temp)/pj->dens;
+			pi->temp_eval=temp_neighborEffect;
+		}
+	}
 }
-void SPHSystem::HeatAdvect(Particle *p){
-	p->temp += p->temp_eval *time_step;
-    p->temp_eval = 0.0;
-	if(p->temp<250){
-	p->particle_color.x=0.0;
-	p->particle_color.y=0.0;
-	p->particle_color.z=p->temp/250;}
-/*	if(p->temp>250){
-	p->particle_color.x=(p->temp-250)/250;
-	p->particle_color.y=0.0;
-	p->particle_color.z=0;}*/
+/*void SPHSystem::HeatAdvect(Particle *p){
+	Particle *p;
+	//p->temp += p->temp_eval *time_step;
+    //p->temp_eval = 0.0;
+	
+
+}*/
+void SPHSystem::SetColor(){
+	/*Particle *p;
+	for(uint i=0; i<num_particle; i++)
+	{
+		p=&(mem[i]);
+		if(p->temp<ICE_T){
+	       p->particle_color.x=0.0;
+	       p->particle_color.y=0.0;
+	       p->particle_color.z=p->temp/(ICE_T-MIN_T);	
+	      }
+	    if(p->temp>ICE_T){
+	       p->particle_color.x=0.0;
+	       p->particle_color.y=0.0;
+	       p->particle_color.z=p->temp/(MAX_T-ICE_T);
+        }
+	}*/
 }
 int3 SPHSystem::calc_cell_pos(float3 p)
 {
