@@ -25,7 +25,8 @@
 #include "sph_system.h"
 #include <GL\glew.h>
 #include "GL\glut.h"
-
+//#include <GL\glut.h>
+//#include "glut\glut.h"
 #pragma comment(lib, "glew32.lib") 
 
 SPHSystem *sph;
