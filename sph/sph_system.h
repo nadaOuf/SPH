@@ -42,6 +42,7 @@ public:
 	Status state;   
 	float  temp;           // melting members
 	float  temp_eval;
+	float heat_fusion;
 	float3 particle_color;
 	///////////////////////////////////////////////
 	Particle *next;
