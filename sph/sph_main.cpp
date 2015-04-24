@@ -207,6 +207,7 @@ void render_particles()
 	for(uint i=0; i<sph->num_particle; i++)
 	{
 		glBegin(GL_POINTS);
+		sph->mem[i].CalcParticleColor();
 		    glColor3f(sph->mem[i].particle_color.x, sph->mem[i].particle_color.y, sph->mem[i].particle_color.z);
 			glVertex3f(sph->mem[i].pos.x*sim_ratio.x+real_world_origin.x, 
 						sph->mem[i].pos.y*sim_ratio.y+real_world_origin.y,

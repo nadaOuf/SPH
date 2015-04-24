@@ -97,6 +97,18 @@ void SPHSystem::animation()
 	comp_dens_pres();
 	comp_force_adv();
 	advection();
+	
+	float3 pos,vel;
+
+	/*pos.x=world_size.x;
+	pos.y=world_size.y;
+	pos.z=world_size.z;
+	
+	vel.x=-1.0f;
+	vel.y=0.0f;
+	vel.z=0.0f;
+
+	add_particle(pos, vel);*/
 //	HeatTransfer();
 }
 
@@ -148,7 +160,7 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 	p->particle_color.y = 0;
 	p->particle_color.z = 0;
 
-	p->temp = 300;
+	p->temp = 250;
 	//p->CalcParticleColor();
 	num_particle++;
 }
@@ -290,10 +302,11 @@ void SPHSystem::comp_force_adv()
 		p->acc.y=0.0f;
 		p->acc.z=0.0f;
 /////////////////////////////add particle_heat_transfer...///////////////////////////////
-		for(uint j=0; j<num_particle; j++){
+		//!!!!!!!!!!!!!!!
+		/*for(uint j=0; j<num_particle; j++){
 			Particle *pj;
 			pj=&(mem[j]);
-			p->temp+=HeatTransfer_particle(p, pj);}
+			p->temp+=HeatTransfer_particle(p, pj);}*/
 		//////////////////////////////////////////////////////////////
 		if(pState==SOLID)
 		{
@@ -395,6 +408,9 @@ void SPHSystem::advection()
 	for(uint i=0; i<num_particle; i++)
 	{
 		p=&(mem[i]);
+		//test:
+		//p->temp+=0.5;
+		//
 		if(p->state == SOLID)
 		{
 			p->acc.x = 0;
