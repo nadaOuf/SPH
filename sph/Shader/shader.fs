@@ -9,8 +9,10 @@ void main()
     if (mag > 1.0) discard;   // kill pixels outside circle
     N.z = sqrt(1.0-mag);
 
+	N = vec3(1,, 0, 0);
+
     // calculate lighting
     float diffuse = max(0.0, dot(lightDir, N));
 
-    gl_FragColor = diffuse;//gl_Color * diffuse;
+    gl_FragColor = gl_Color* diffuse;
 }

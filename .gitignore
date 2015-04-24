@@ -54,3 +54,10 @@ Temporary Items
 *.idb
 sph/Release/sph.vcxprojResolveAssemblyReference.cache
 *.cache
+<<<<<<< HEAD
+sph/slef_def.h
+sph/slef_def.h
+=======
+*.suo
+*.cache
+>>>>>>> 8e212d18e26ed44fd76255a9b7314083af60f2b6
