@@ -123,7 +123,7 @@ void SPHSystem::init_system()
 	vel.y=0.0f;
 	vel.z=0.0f;
 
-	add_heatSource(pos, 1000);
+	add_heatSource(pos, 400);
 
 	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
 	{
@@ -173,8 +173,8 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 	p->pres=0.0f;
 
 	p->next=NULL;
-	p->state = SOLID;
-	//p->state = LIQUID;
+	//p->state = SOLID;
+	p->state = LIQUID;
 
 	p->temp = 253;
 	p->temp_eval=0;
@@ -361,7 +361,6 @@ void SPHSystem::comp_force_adv()
 					{
 						//no neighbor particles :
 						//1. check boundary/rigid
-						//2. check heat source
 						continue;
 					}
 					++ni; //sum the number of particles surrounding
@@ -372,8 +371,10 @@ void SPHSystem::comp_force_adv()
 						dist.x = - testSource.pos.x + p->pos.x;
 						dist.y = - testSource.pos.y + p->pos.y;
 						dist.z = - testSource.pos.z + p->pos.z;
+						float d2 = dist.x*dist.x+dist.y*dist.y+dist.z*dist.z;
+						//change this to ray trace......slow....???
 						if(dist.x*x>=0&&dist.y*y>=0&&dist.z*z>=0)//vector cosin stuff...
-							p->temp=1000;
+							p->temp += (testSource.temp-p->temp)*time_step*sqrt(d2);
 					}
 					while(np!=NULL)
 					{
