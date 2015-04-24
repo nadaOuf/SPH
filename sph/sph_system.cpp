@@ -33,7 +33,7 @@ SPHSystem::SPHSystem()
 	world_size.x=0.64f;
 	world_size.y=0.64f;
 	world_size.z=0.64f;
-	cell_size=kernel;
+	cell_size= kernel;
 	grid_size.x=(uint)ceil(world_size.x/cell_size);
 	grid_size.y=(uint)ceil(world_size.y/cell_size);
 	grid_size.z=(uint)ceil(world_size.z/cell_size);
@@ -46,7 +46,7 @@ SPHSystem::SPHSystem()
 	rest_density=1000.0f;
 	gas_constant=1.0f;
 	viscosity=6.5f;
-	time_step=0.003f;
+	time_step= 0.003f;
 	surf_norm=6.0f;
 	surf_coe=0.1f;
 
@@ -148,7 +148,7 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 	p->particle_color.y = 0;
 	p->particle_color.z = 0;
 
-	p->temp = 300;
+	p->temp = 100;
 	//p->CalcParticleColor();
 
 	num_particle++;
@@ -299,7 +299,7 @@ void SPHSystem::comp_force_adv()
 			//!!!___other faces later.
 			if(p->pos.y < 0.0f)
 				IceForce_rigid.y = -gravity.y - p->vel.y*1.65/time_step;
-			continue;
+			//continue;
 		}
 		grad_color.x=0.0f;
 		grad_color.y=0.0f;
@@ -312,6 +312,7 @@ void SPHSystem::comp_force_adv()
 			{
 				for(int z=-1; z<=1; z++)
 				{
+
 					near_pos.x=cell_pos.x+x;
 					near_pos.y=cell_pos.y+y;
 					near_pos.z=cell_pos.z+z;
@@ -320,11 +321,13 @@ void SPHSystem::comp_force_adv()
 					if(hash == 0xffffffff)
 					{//no neighbor particles, check boundary/rigid
 						continue;
-					}
-
-					++ni; //sum the number of particles surrounding
+					}					
 
 					np=cell[hash];
+
+					if(np != NULL && (x + y + z != 0) && ((x == 0 && y == 0) || (x == 0 && z == 0) || ( y == 0 && z == 0)))
+						++ni; //sum the number of particles surrounding
+
 					while(np != NULL)
 					{
 						if(pState=SOLID)
@@ -376,7 +379,10 @@ void SPHSystem::comp_force_adv()
 		if(ni > 6) 
 			dA = 0.0f;
 		//Add the heat transfer due to air 
-		p->temp += HeatTransferAir(p, dA);
+		p->temp += HeatTransferAir(p, dA)*time_step;
+
+		if(p->temp >= 300) //Change state if the temprature exceeds the melting point of water
+			p->state = LIQUID;
 
 		lplc_color+=self_lplc_color/p->dens;
 		p->surf_norm=sqrt(grad_color.x*grad_color.x+grad_color.y*grad_color.y+grad_color.z*grad_color.z);
@@ -479,14 +485,12 @@ float SPHSystem::HeatTransferAir(Particle *p, float dA)
 
 	//Determining the thermal conductivity of the particle depending on its state
 	if(p->state==LIQUID)
-		cd = THERMAL_CONDUCTIVITY_WATER;
+		cd = HEAT_CAPACITY_WATER;
 	if(p->state==SOLID)
-		cd = THERMAL_CONDUCTIVITY_ICE;
-	if(p->state==RIGID)
-		cd = THERMAL_CONDUCTIVITY;
+		cd = HEAT_CAPACITY_ICE;
 
 	//return the temprature change due to air
-	return Q/(cd*mass);
+	return Q/(cd);
 
 }
 
@@ -497,7 +501,7 @@ void SPHSystem::HeatAdvect(Particle *p){
 	p->particle_color.x=0.0;
 	p->particle_color.y=0.0;
 	p->particle_color.z=p->temp/250;}
-/*	if(p->temp>250){
+	/*if(p->temp>250){
 	p->particle_color.x=(p->temp-250)/250;
 	p->particle_color.y=0.0;
 	p->particle_color.z=0;}*/
