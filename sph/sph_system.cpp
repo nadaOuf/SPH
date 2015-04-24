@@ -301,7 +301,7 @@ void SPHSystem::comp_force_adv()
 		p->acc.y=0.0f;
 		p->acc.z=0.0f;
 /////////////////////////////add particle_heat_transfer...///////////////////////////////
-		for(uint j=0; j<num_particle; j++){
+		/*(for(uint j=0; j<num_particle; j++){
 			if(i!=j){
 			Particle *pj;
 			pj=&(mem[j]);
@@ -310,7 +310,7 @@ void SPHSystem::comp_force_adv()
 		    p->CalcParticleColor();
 			}
 		}
-		p->temp+=p->temp_eval*time_step;
+		p->temp+=p->temp_eval*time_step;*/
 		//////////////////////////////////////////////////////////////
 		if(pState==SOLID)
 		{
@@ -338,12 +338,17 @@ void SPHSystem::comp_force_adv()
 
 					if(hash == 0xffffffff)
 					{//no neighbor particles, check boundary/rigid
+
 						continue;
 					}
 					++ni; //sum the number of particles surrounding
 					np=cell[hash];
+					p->temp_eval+=HeatTransfer_particle(p, np);
 					while(np != NULL)
 					{
+						p->temp_eval+=HeatTransfer_particle(p, np);
+
+
 						if(pState=SOLID)
 						{
 							np = np->next;
@@ -385,9 +390,13 @@ void SPHSystem::comp_force_adv()
 						}
 						np=np->next;
 					}
+					////////
+					//p->temp+=p->temp_eval*time_step;
+					/////////////
 				}
 			}
 		}
+		p->temp+=p->temp_eval*time_step;
 		float dA = (6 - ni) / 6;
 		if(ni > 6) 
 			dA = 0.0f;
@@ -411,6 +420,7 @@ void SPHSystem::comp_force_adv()
 
 void SPHSystem::advection()
 {
+
 	Particle *p;
 	for(uint i=0; i<num_particle; i++)
 	{
@@ -422,6 +432,8 @@ void SPHSystem::advection()
 			p->acc.z = 0;
 
 		}
+		//if(p->temp>273)p->state=LIQUID;
+		//else p->state=SOLID;
 		p->vel.x=p->vel.x+p->acc.x*time_step/p->dens+gravity.x*time_step;
 		p->vel.y=p->vel.y+p->acc.y*time_step/p->dens+gravity.y*time_step;
 		p->vel.z=p->vel.z+p->acc.z*time_step/p->dens+gravity.z*time_step;
@@ -509,14 +521,14 @@ float SPHSystem::HeatTransfer_particle(Particle *pj, Particle *pi){
 
 	rij  = sqrt(pow(distx,2)+ pow(disty,2)+ pow(distz,2));
 
-		if(rij<R_HEATAFFECT){
+		//if(rij<R_HEATAFFECT){
 	        smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
 			temp_neighborEffect=cd*mass*(pj->temp-pi->temp)/pj->dens*smooth_k;
 			//cout<<temp_neighborEffect;
 			//pi->temp_eval+=temp_neighborEffect;
   			return temp_neighborEffect;
-           }
-		else return 0.0;
+         //  }
+	//	else return 0.0;
 }
 		/*
 void SPHSystem::HeatTransfer(){
