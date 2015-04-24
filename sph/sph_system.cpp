@@ -391,16 +391,13 @@ void SPHSystem::comp_force_adv()
 						//Calc Source Heat
 						//change this to ray trace......slow....???
 						if(dist.x*x>=0&&dist.y*y>=0&&dist.z*z>=0)//vector cosin stuff...
-//<<<<<<< HEAD
-							//p->temp += EPSILON*(testSource.temp-p->temp)*time_step/sqrt(d2);
-//=======
 						{
 							if(p->temp >= 275 && p->state == SOLID)
 								p->heat_fusion += EPSILON*(testSource.temp-p->temp)/d2;
 							else
 							p->temp += EPSILON*(testSource.temp-p->temp)*time_step/(d2);
 						}
-//>>>>>>> origin/master
+
 					}
 					while(np!=NULL)
 					{
@@ -485,12 +482,8 @@ void SPHSystem::comp_force_adv()
 			if(p->state==SOLID)
 				cd = HEAT_CAPACITY_ICE;
 
-			p->temp += HeatTransferAir(p, dA)/(cd*mass)*time_step;
+			p->temp += (HeatTransferAir(p, dA)/cd*mass)*time_step;
 		}
-			
-
-		//if(p->temp >= 300) //Change state if the temprature exceeds the melting point of water
-		//	p->state = LIQUID;
 
 		lplc_color+=self_lplc_color/p->dens;
 		p->surf_norm=sqrt(grad_color.x*grad_color.x+grad_color.y*grad_color.y+grad_color.z*grad_color.z);
