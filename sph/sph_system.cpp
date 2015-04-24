@@ -30,8 +30,8 @@ SPHSystem::SPHSystem()
 	num_particle=0;
 
 	kernel=0.04f;
-	//mass=0.02f;
-	mass=0.0008f;
+	mass=0.02f;
+	//mass=0.0008f;
 	world_size.x=0.64f;
 	world_size.y=0.64f;
 	world_size.z=0.64f;
@@ -123,6 +123,8 @@ void SPHSystem::init_system()
 	vel.y=0.0f;
 	vel.z=0.0f;
 
+	add_heatSource(pos, 1000);
+
 	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
 	{
 		for(pos.y=world_size.y*0.3f; pos.y<world_size.y*0.9f; pos.y+=(kernel*0.5f))
@@ -143,6 +145,12 @@ void SPHSystem::init_system()
 
 	///////////////////////////////////////////////
 	printf("Init Particle: %u\n", num_particle);
+}
+
+void SPHSystem::add_heatSource(float3 pos, float T)
+{
+	testSource.pos = pos;
+	testSource.temp = T;
 }
 
 void SPHSystem::add_particle(float3 pos, float3 vel)
@@ -166,18 +174,12 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 
 	p->next=NULL;
 	p->state = SOLID;
-	//p->particle_color.x = 255;
-    //p->particle_color.y = 0;
-	//p->particle_color.z = 0;
+	//p->state = LIQUID;
 
-<<<<<<< HEAD
-	p->temp = 250;
-	//p->CalcParticleColor();
-=======
 	p->temp = 253;
 	p->temp_eval=0;
 	p->CalcParticleColor();
->>>>>>> origin/master
+
 	num_particle++;
 }
 
@@ -313,19 +315,21 @@ void SPHSystem::comp_force_adv()
 		cell_pos=calc_cell_pos(p->pos);
 
 		pState = p->state;
-
+		
 		p->acc.x=0.0f;
 		p->acc.y=0.0f;
 		p->acc.z=0.0f;
+		
+		if(pState==SOLID)
+		{
+			//Boundary Checking.
+			//!!!___other faces later.
+			if(p->pos.y < 0.0f)
+				IceForce_rigid.y = -gravity.y - p->vel.y*1.65/time_step;
+			//continue;
+		}
 /////////////////////////////add particle_heat_transfer...///////////////////////////////
-<<<<<<< HEAD
-		//!!!!!!!!!!!!!!!
-		/*for(uint j=0; j<num_particle; j++){
-			Particle *pj;
-			pj=&(mem[j]);
-			p->temp+=HeatTransfer_particle(p, pj);}*/
-=======
-		for(uint j=0; j<num_particle; j++){
+/*		for(uint j=0; j<num_particle; j++){
 			if(i!=j){
 			Particle *pj;
 			pj=&(mem[j]);
@@ -334,17 +338,9 @@ void SPHSystem::comp_force_adv()
 		    p->CalcParticleColor();
 			}
 		}
-		p->temp+=p->temp_eval*time_step;
->>>>>>> origin/master
+		p->temp+=p->temp_eval*time_step;*/
 		//////////////////////////////////////////////////////////////
-		if(pState==SOLID)
-		{
-			//Boundary Checking.
-			//!!!___other faces later.
-			if(p->pos.y < 0.0f)
-				IceForce_rigid.y = -gravity.y - p->vel.y*1.65/time_step;
-			continue;
-		}
+
 		grad_color.x=0.0f;
 		grad_color.y=0.0f;
 		grad_color.z=0.0f;
@@ -360,19 +356,34 @@ void SPHSystem::comp_force_adv()
 					near_pos.y=cell_pos.y+y;
 					near_pos.z=cell_pos.z+z;
 					hash=calc_cell_hash(near_pos);
-
+					
 					if(hash == 0xffffffff)
-					{//no neighbor particles, check boundary/rigid
+					{
+						//no neighbor particles :
+						//1. check boundary/rigid
+						//2. check heat source
 						continue;
 					}
 					++ni; //sum the number of particles surrounding
 					np=cell[hash];
-					while(np != NULL)
+					if(np==NULL)
+					{//Surface - check heat source
+						float3 dist;
+						dist.x = - testSource.pos.x + p->pos.x;
+						dist.y = - testSource.pos.y + p->pos.y;
+						dist.z = - testSource.pos.z + p->pos.z;
+						if(dist.x*x>=0&&dist.y*y>=0&&dist.z*z>=0)//vector cosin stuff...
+							p->temp=1000;
+					}
+					while(np!=NULL)
 					{
 						if(pState=SOLID)
 						{
-							np = np->next;
-							continue;
+							if(np->state == SOLID)
+							{ 
+								np = np->next;
+								continue;
+							}
 						}
 						//rel_pos = p_pos - np_pos
 						rel_pos.x=p->pos.x-np->pos.x;
@@ -417,10 +428,11 @@ void SPHSystem::comp_force_adv()
 		if(ni > 6) 
 			dA = 0.0f;
 		//Add the heat transfer due to air 
-		p->temp += HeatTransferAir(p, dA);
+		//p->temp += HeatTransferAir(p, dA);
 		////////////////////////////////////////////
-		p->CalcParticleColor();
-		/////////////////////////////////////////////////
+
+		
+
 		lplc_color+=self_lplc_color/p->dens;
 		p->surf_norm=sqrt(grad_color.x*grad_color.x+grad_color.y*grad_color.y+grad_color.z*grad_color.z);
 
@@ -500,7 +512,6 @@ void SPHSystem::advection()
 		p->ev.y=(p->ev.y+p->vel.y)/2;
 		p->ev.z=(p->ev.z+p->vel.z)/2;
 	}
-	p->CalcParticleColor();
 }
 
 float SPHSystem::HeatTransferAir(Particle *p, float dA)

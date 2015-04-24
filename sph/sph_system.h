@@ -88,7 +88,7 @@ public:
 	float self_lplc_color;
 
 	Particle *mem;
-	Particle *testSource;
+	Particle testSource;
 	Particle *sPhoton;
 	Particle **cell;
 
