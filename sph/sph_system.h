@@ -90,6 +90,9 @@ public:
 	float self_dens;
 	float self_lplc_color;
 
+	int N_ice;
+	int N_w;
+
 	Particle *mem;
 	Particle testSource;
 	Particle *sPhoton;

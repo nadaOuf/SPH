@@ -162,11 +162,9 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 
 	p->state = SOLID;
 
-	p->particle_color.x = 255;
-	p->particle_color.y = 0;
-	p->particle_color.z = 0;
-
 	p->temp = 100;
+	if(p->temp<=273) N_ice++;
+	else N_w++;
 
 	num_particle++;
 }
@@ -372,15 +370,10 @@ void SPHSystem::comp_force_adv()
 						continue;
 
 					}					
-
 					np=cell[hash];
-
-
 					if(np != NULL && (x + y + z != 0) && ((x == 0 && y == 0) || (x == 0 && z == 0) || ( y == 0 && z == 0)))
 						++ni; //sum the number of particles surrounding
 
-					
-					
 					if(np==NULL)
 					{//Surface - check heat source
 						float3 dist;
@@ -388,21 +381,20 @@ void SPHSystem::comp_force_adv()
 						dist.y =  testSource.pos.y - p->pos.y;
 						dist.z =  testSource.pos.z - p->pos.z;
 						float d2 = dist.x*dist.x+dist.y*dist.y+dist.z*dist.z;
+						//Calc Source Heat
 						//change this to ray trace......slow....???
 						if(dist.x*x>=0&&dist.y*y>=0&&dist.z*z>=0)//vector cosin stuff...
-							p->temp += EPSILON*(testSource.temp-p->temp)*time_step/(d2);
+							p->temp += EPSILON*(testSource.temp-p->temp)*time_step/sqrt(d2);
 					}
 					while(np!=NULL)
 					{
 						p->temp_eval+=HeatTransfer_particle(p, np);
-
-
-						if(pState=SOLID)
+						if(pState==SOLID)
 						{
 							np = np->next;
 							continue;
 						}
-	
+						//if(pState)
 						rel_pos.x=p->pos.x-np->pos.x;
 						rel_pos.y=p->pos.y-np->pos.y;
 						rel_pos.z=p->pos.z-np->pos.z;
@@ -429,6 +421,20 @@ void SPHSystem::comp_force_adv()
 							p->acc.x=p->acc.x + rel_vel.x*temp_force; 
 							p->acc.y=p->acc.y + rel_vel.y*temp_force; 
 							p->acc.z=p->acc.z + rel_vel.z*temp_force; 
+
+							//interfacial tension fi.
+							if(np->state == LIQUID)
+							{
+								p->acc.x=p->acc.x - rel_pos.x*Kw/(r2*mass); 
+								p->acc.y=p->acc.y - rel_pos.y*Kw/(r2*mass); 
+								p->acc.z=p->acc.z - rel_pos.z*Kw/(r2*mass); 
+							}
+							else if(np->state == SOLID)
+							{
+								p->acc.x=p->acc.x - rel_pos.x*Kice/(r2*mass); 
+								p->acc.y=p->acc.y - rel_pos.y*Kice/(r2*mass); 
+								p->acc.z=p->acc.z - rel_pos.z*Kice/(r2*mass); 
+							}
 
 							float temp=(-1) * grad_poly6 * V * pow(kernel_2-r2, 2);
 							grad_color.x += temp * rel_pos.x;
@@ -471,25 +477,34 @@ void SPHSystem::comp_force_adv()
 
 void SPHSystem::advection()
 {
-
+	N_ice = 0;
+	N_w = 0;
 	Particle *p;
 	for(uint i=0; i<num_particle; i++)
 	{
 		p=&(mem[i]);
+				//latent heat
+		if(p->state == SOLID) 
+		{
+			N_ice++;
+			if(p->temp>=275)
+			{
+				p->state = LIQUID;
+				N_w++;
+				N_ice--;
+			}
+		}
+		if(p->state == LIQUID)
+		{
+			N_w++;
+			//if(p->temp<=270) p->state = SOLID;
+		}
 		if(p->state == SOLID)
 		{
 			p->acc.x = 0;
 			p->acc.y = IceForce_rigid.y*p->dens;
 			p->acc.z = 0;
-		}
-		//latent heat
-		if(p->state == SOLID) 
-		{
-			if(p->temp>=275) p->state = LIQUID;
-		}
-		if(p->state == LIQUID)
-		{
-			//if(p->temp<=270) p->state = SOLID;
+			//continue;//test!!!!!!!
 		}
 		p->vel.x=p->vel.x+p->acc.x*time_step/p->dens+gravity.x*time_step;
 		p->vel.y=p->vel.y+p->acc.y*time_step/p->dens+gravity.y*time_step;
