@@ -202,7 +202,7 @@ void init_ratio()
 void render_particles()
 {
 	glPointSize(4.0f);
-	glColor3f(0.0f, 0.0f, 1.0f);
+	//glColor3f(0.0f, 0.0f, 1.0f);
 
 	for(uint i=0; i<sph->num_particle; i++)
 	{
@@ -220,7 +220,9 @@ void display_func()
 {
 	glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	/////////////////////////////back_ground_color/////////////////////
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	/////////////////////////////////
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glPushMatrix();
