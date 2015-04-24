@@ -23,11 +23,12 @@
 #include "sph_data.h"
 #include "sph_timer.h"
 #include "sph_system.h"
-#include <GL\glew.h>
-#include <GL\glut.h>
+#include  <GL\glew.h>
+#include  <GL\glut.h>
 #include "slef_def.h"
 
-#pragma comment(lib, "glew32.lib") 
+
+//#pragma comment(lib, "glew32.lib") 
 
 SPHSystem *sph;
 
@@ -198,18 +199,17 @@ void init_ratio()
 	sim_ratio.z=real_world_side.z/sph->world_size.z;
 }
 
-
 void render_particles()
 {
-	glPointSize(4.0f);
+	glPointSize(8.0f);
 	//glColor3f(0.0f, 0.0f, 1.0f);
 
 	for(uint i=0; i<sph->num_particle; i++)
 	{
-		sph->mem[i].CalcParticleColor();
-		glColor3f(sph->mem[i].particle_color.x,sph->mem[i].particle_color.y,sph->mem[i].particle_color.z);
 		glBegin(GL_POINTS);
-		glVertex3f(sph->mem[i].pos.x*sim_ratio.x+real_world_origin.x, 
+		sph->mem[i].CalcParticleColor();
+		    glColor3f(sph->mem[i].particle_color.x, sph->mem[i].particle_color.y, sph->mem[i].particle_color.z);
+			glVertex3f(sph->mem[i].pos.x*sim_ratio.x+real_world_origin.x, 
 						sph->mem[i].pos.y*sim_ratio.y+real_world_origin.y,
 						sph->mem[i].pos.z*sim_ratio.z+real_world_origin.z);
 		glEnd();
@@ -220,7 +220,9 @@ void display_func()
 {
 	glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_DEPTH_TEST);
+	/////////////////////////////back_ground_color/////////////////////
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	/////////////////////////////////
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glPushMatrix();

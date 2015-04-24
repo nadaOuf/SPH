@@ -52,3 +52,7 @@ Temporary Items
 *.lastbuildstate
 *.log
 *.idb
+sph/Release/sph.vcxprojResolveAssemblyReference.cache
+*.cache
+*.suo
+*.cache
