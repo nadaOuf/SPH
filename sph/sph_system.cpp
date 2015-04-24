@@ -30,8 +30,8 @@ SPHSystem::SPHSystem()
 	num_particle=0;
 
 	kernel=0.04f;
-	//mass=0.02f;
-	mass=0.0008f;
+	mass=0.02f;
+	//mass=0.0008f;
 	world_size.x=0.64f;
 	world_size.y=0.64f;
 	world_size.z=0.64f;
@@ -165,6 +165,12 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 	p->temp = 100;
 
 	num_particle++;
+}
+
+void SPHSystem::add_heatSource(float3 pos, float T)
+{
+	testSource.pos = pos;
+	testSource.temp = T;
 }
 
 void SPHSystem::build_table()
