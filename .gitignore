@@ -52,3 +52,7 @@ Temporary Items
 *.lastbuildstate
 *.log
 *.idb
+sph/Release/sph.vcxprojResolveAssemblyReference.cache
+*.cache
+sph/slef_def.h
+sph/slef_def.h

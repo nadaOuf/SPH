@@ -318,7 +318,7 @@ void SPHSystem::comp_force_adv()
 			//!!!___other faces later.
 			if(p->pos.y < 0.0f)
 				IceForce_rigid.y = -gravity.y - p->vel.y*1.65/time_step;
-			continue;
+			
 		}
 		grad_color.x=0.0f;
 		grad_color.y=0.0f;
@@ -343,7 +343,7 @@ void SPHSystem::comp_force_adv()
 					}
 					++ni; //sum the number of particles surrounding
 					np=cell[hash];
-					p->temp_eval+=HeatTransfer_particle(p, np);
+					
 					while(np != NULL)
 					{
 						p->temp_eval+=HeatTransfer_particle(p, np);
@@ -354,12 +354,12 @@ void SPHSystem::comp_force_adv()
 							np = np->next;
 							continue;
 						}
-						//rel_pos = p_pos - np_pos
+	
 						rel_pos.x=p->pos.x-np->pos.x;
 						rel_pos.y=p->pos.y-np->pos.y;
 						rel_pos.z=p->pos.z-np->pos.z;
 						r2=rel_pos.x*rel_pos.x+rel_pos.y*rel_pos.y+rel_pos.z*rel_pos.z;
-
+						//p->temp_eval+=HeatTransfer_particle(p, np);
 						if(r2 < kernel_2 && r2 > INF)
 						{
 							r=sqrt(r2);
@@ -401,7 +401,7 @@ void SPHSystem::comp_force_adv()
 		if(ni > 6) 
 			dA = 0.0f;
 		//Add the heat transfer due to air 
-		p->temp += HeatTransferAir(p, dA);
+	//	p->temp += HeatTransferAir(p, dA);
 		////////////////////////////////////////////
 		p->CalcParticleColor();
 		/////////////////////////////////////////////////
@@ -415,7 +415,7 @@ void SPHSystem::comp_force_adv()
 			p->acc.z+=surf_coe * lplc_color * grad_color.z / p->surf_norm;
 		}
 	}
-	
+
 }
 
 void SPHSystem::advection()
@@ -432,8 +432,8 @@ void SPHSystem::advection()
 			p->acc.z = 0;
 
 		}
-		//if(p->temp>273)p->state=LIQUID;
-		//else p->state=SOLID;
+		if(p->temp>273)p->state=LIQUID;
+		else p->state=SOLID;
 		p->vel.x=p->vel.x+p->acc.x*time_step/p->dens+gravity.x*time_step;
 		p->vel.y=p->vel.y+p->acc.y*time_step/p->dens+gravity.y*time_step;
 		p->vel.z=p->vel.z+p->acc.z*time_step/p->dens+gravity.z*time_step;
@@ -560,13 +560,7 @@ void SPHSystem::HeatTransfer(){
 		}
 	}
 }*/
-/*void SPHSystem::HeatAdvect(Particle *p){
-	Particle *p;
-	//p->temp += p->temp_eval *time_step;
-    //p->temp_eval = 0.0;
-	
 
-}*/
 //void SPHSystem::_SetColor(){
 	/*Particle *p;
 	for(uint i=0; i<num_particle; i++)

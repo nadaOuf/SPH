@@ -88,6 +88,8 @@ public:
 	float self_lplc_color;
 
 	Particle *mem;
+	Particle testSource;
+	Particle *sPhoton;
 	Particle **cell;
 
 	uint sys_running;
@@ -98,6 +100,7 @@ public:
 	void animation();
 	void init_system();
 	void add_particle(float3 pos, float3 vel);
+	void add_heatSource(float3 pos, float T);
 
 private:
 	void build_table();
