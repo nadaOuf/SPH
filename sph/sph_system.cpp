@@ -115,7 +115,7 @@ void SPHSystem::init_system()
 	pos.y=world_size.y;
 	pos.z=world_size.z;
 
-	add_heatSource(pos, 400);
+	add_heatSource(pos, 310);
 
 	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
 	{
@@ -166,7 +166,9 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 	p->particle_color.y = 0;
 	p->particle_color.z = 0;
 
-	p->temp = 100;
+	p->temp = 0;
+
+	p->heat_fusion = 0;
 
 	num_particle++;
 }
@@ -390,7 +392,12 @@ void SPHSystem::comp_force_adv()
 						float d2 = dist.x*dist.x+dist.y*dist.y+dist.z*dist.z;
 						//change this to ray trace......slow....???
 						if(dist.x*x>=0&&dist.y*y>=0&&dist.z*z>=0)//vector cosin stuff...
+						{
+							if(p->temp >= 275 && p->state == SOLID)
+								p->heat_fusion += EPSILON*(testSource.temp-p->temp)/d2;
+							else
 							p->temp += EPSILON*(testSource.temp-p->temp)*time_step/(d2);
+						}
 					}
 					while(np!=NULL)
 					{
@@ -444,14 +451,28 @@ void SPHSystem::comp_force_adv()
 				}
 			}
 		}
-		p->temp+=p->temp_eval*time_step;
+
 		float dA = (6 - ni) / 6;
 		if(ni > 6) 
 			dA = 0.0f;
-		//Add the heat transfer due to air 
 
+		if(p->temp >= 275 && p->state == SOLID)
+			p->heat_fusion += HeatTransferAir(p, dA) + p->temp_eval;
+		else
+		{
+			p->temp+=p->temp_eval*time_step;
 
-		p->temp += HeatTransferAir(p, dA)*time_step;
+			//Add the heat transfer due to air 
+			float cd = 0.0f;
+			//Determining the thermal conductivity of the particle depending on its state
+			if(p->state==LIQUID)
+				cd = HEAT_CAPACITY_WATER;
+			if(p->state==SOLID)
+				cd = HEAT_CAPACITY_ICE;
+
+			p->temp += HeatTransferAir(p, dA)/(cd*mass)*time_step;
+		}
+			
 
 		//if(p->temp >= 300) //Change state if the temprature exceeds the melting point of water
 		//	p->state = LIQUID;
@@ -485,7 +506,7 @@ void SPHSystem::advection()
 		//latent heat
 		if(p->state == SOLID) 
 		{
-			if(p->temp>=275) p->state = LIQUID;
+			if(p->temp>=273 && p->heat_fusion > 330) p->state = LIQUID;
 		}
 		if(p->state == LIQUID)
 		{
@@ -554,15 +575,8 @@ float SPHSystem::HeatTransferAir(Particle *p, float dA)
 	float Q = 0.0f, cd = 0.0f;
 	Q = THERMAL_CONDUCTIVITY_AIR * (T_air - p->temp) * dA;
 
-	//Determining the thermal conductivity of the particle depending on its state
-	if(p->state==LIQUID)
-		cd = HEAT_CAPACITY_WATER;
-	if(p->state==SOLID)
-		cd = HEAT_CAPACITY_ICE;
-
 	//return the temprature change due to air
-	return Q/(cd);
-
+	return Q;
 }
 float SPHSystem::HeatTransfer_particle(Particle *pj, Particle *pi){
 	float distx,disty,distz;
