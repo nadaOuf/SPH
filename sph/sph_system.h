@@ -64,6 +64,9 @@ public:
 	uint tot_cell;
 
 
+	float3 IceVelocity;
+	float3 IceDeltPos;
+
 	float3 IceForce_fluid;
 	float3 IceForce_rigid;
 

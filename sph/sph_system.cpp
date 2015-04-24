@@ -128,7 +128,7 @@ void SPHSystem::init_system()
 		}
 	}
 	////////////////////////////add particle temp test///////////
-	for(int i=0;i<300;i++){
+	for(int i=0;i<0;i++){
 	Particle *p=&(mem[i]);
 	p->temp=370;
 	p->CalcParticleColor();
@@ -278,6 +278,14 @@ void SPHSystem::comp_force_adv()
 	IceForce_rigid.y = 0;
 	IceForce_rigid.z = 0;
 
+	IceVelocity.x = 0;
+	IceVelocity.y = 0;
+	IceVelocity.z = 0;
+
+	IceDeltPos.x = 0;
+	IceDeltPos.y = 0;
+	IceDeltPos.z = 0;
+
 	Particle *p;
 	Particle *np;
 
@@ -333,7 +341,11 @@ void SPHSystem::comp_force_adv()
 			//Boundary Checking.
 			//!!!___other faces later.
 			if(p->pos.y < 0.0f)
+			{
 				IceForce_rigid.y = -gravity.y - p->vel.y*1.65/time_step;
+				IceVelocity.y = p->vel.y*wall_damping;
+				IceDeltPos.y = 0.0 - p->pos.y;
+			}
 			
 		}
 		grad_color.x=0.0f;
@@ -378,7 +390,7 @@ void SPHSystem::comp_force_adv()
 						float d2 = dist.x*dist.x+dist.y*dist.y+dist.z*dist.z;
 						//change this to ray trace......slow....???
 						if(dist.x*x>=0&&dist.y*y>=0&&dist.z*z>=0)//vector cosin stuff...
-							p->temp += EPSILON*(testSource.temp-p->temp)*time_step/sqrt(d2);
+							p->temp += EPSILON*(testSource.temp-p->temp)*time_step/(d2);
 					}
 					while(np!=NULL)
 					{
@@ -487,7 +499,11 @@ void SPHSystem::advection()
 		p->pos.y=p->pos.y+p->vel.y*time_step;
 		p->pos.z=p->pos.z+p->vel.z*time_step;
 
-		if(p->state == SOLID) continue;
+		if(p->state == SOLID)
+		{
+			p->pos.y += IceDeltPos.y; 
+			continue;
+		}
 
 		if(p->pos.x >= world_size.x-BOUNDARY)
 		{
