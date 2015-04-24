@@ -22,14 +22,16 @@
 #include "sph_system.h"
 #include "sph_header.h"
 
+#include<iostream>
+using namespace std;
 SPHSystem::SPHSystem()
 {
 	max_particle=30000;
 	num_particle=0;
 
 	kernel=0.04f;
-	mass=0.02f;
-
+	//mass=0.02f;
+	mass=0.0008f;
 	world_size.x=0.64f;
 	world_size.y=0.64f;
 	world_size.z=0.64f;
@@ -119,7 +121,15 @@ void SPHSystem::init_system()
 			}
 		}
 	}
+	////////////////////////////add particle temp test///////////
+	for(int i=0;i<300;i++){
+	Particle *p=&(mem[i]);
+	p->temp=370;
+	p->CalcParticleColor();
+	}
+	Particle *p=&(mem[500]);
 
+	///////////////////////////////////////////////
 	printf("Init Particle: %u\n", num_particle);
 }
 
@@ -144,12 +154,13 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 
 	p->next=NULL;
 	p->state = SOLID;
-	p->particle_color.x = 255;
-	p->particle_color.y = 0;
-	p->particle_color.z = 0;
+	//p->particle_color.x = 255;
+    //p->particle_color.y = 0;
+	//p->particle_color.z = 0;
 
-	p->temp = 300;
-	//p->CalcParticleColor();
+	p->temp = 253;
+	p->temp_eval=0;
+	p->CalcParticleColor();
 	num_particle++;
 }
 
@@ -291,9 +302,15 @@ void SPHSystem::comp_force_adv()
 		p->acc.z=0.0f;
 /////////////////////////////add particle_heat_transfer...///////////////////////////////
 		for(uint j=0; j<num_particle; j++){
+			if(i!=j){
 			Particle *pj;
 			pj=&(mem[j]);
-			p->temp+=HeatTransfer_particle(p, pj);}
+			p->temp_eval+=HeatTransfer_particle(p, pj);
+		
+		    p->CalcParticleColor();
+			}
+		}
+		p->temp+=p->temp_eval*time_step;
 		//////////////////////////////////////////////////////////////
 		if(pState==SOLID)
 		{
@@ -376,7 +393,9 @@ void SPHSystem::comp_force_adv()
 			dA = 0.0f;
 		//Add the heat transfer due to air 
 		p->temp += HeatTransferAir(p, dA);
-		
+		////////////////////////////////////////////
+		p->CalcParticleColor();
+		/////////////////////////////////////////////////
 		lplc_color+=self_lplc_color/p->dens;
 		p->surf_norm=sqrt(grad_color.x*grad_color.x+grad_color.y*grad_color.y+grad_color.z*grad_color.z);
 
@@ -387,6 +406,7 @@ void SPHSystem::comp_force_adv()
 			p->acc.z+=surf_coe * lplc_color * grad_color.z / p->surf_norm;
 		}
 	}
+	
 }
 
 void SPHSystem::advection()
@@ -452,6 +472,7 @@ void SPHSystem::advection()
 		p->ev.y=(p->ev.y+p->vel.y)/2;
 		p->ev.z=(p->ev.z+p->vel.z)/2;
 	}
+	p->CalcParticleColor();
 }
 
 float SPHSystem::HeatTransferAir(Particle *p, float dA)
@@ -476,22 +497,26 @@ float SPHSystem::HeatTransfer_particle(Particle *pj, Particle *pi){
 	float distx,disty,distz;
     float rij;
 	float cd;
+	 float smooth_k;
 	float temp_neighborEffect;
-    	distx = pj->pos.x - pi->pos.x;
-	    disty = pj->pos.y - pi->pos.y;
-	    distz = pj->pos.z - pi->pos.z;
-		rij  = sqrt(pow(distx,2)+ pow(disty,2)+ pow(distz,2));
-		if(rij<R_HEATAFFECT){
-			//tt.push_back(i);
-	        if(pj->state==LIQUID)cd = THERMAL_CONDUCTIVITY_WATER;
-	        if(pj->state==SOLID)cd = THERMAL_CONDUCTIVITY_ICE;
-	        if(pj->state==RIGID)cd = THERMAL_CONDUCTIVITY;
-	        float smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
-			temp_neighborEffect=cd*mass*(pj->temp-pi->temp)/pj->dens;
-			//pi->temp_eval+=temp_neighborEffect;
-			return temp_neighborEffect;
+    distx = pj->pos.x - pi->pos.x;
+	disty = pj->pos.y - pi->pos.y;
+	distz = pj->pos.z - pi->pos.z;
 
-}
+	if(pj->state==LIQUID)cd = THERMAL_CONDUCTIVITY_WATER;
+    if(pj->state==SOLID)cd = THERMAL_CONDUCTIVITY_ICE;
+	if(pj->state==RIGID)cd = THERMAL_CONDUCTIVITY;
+
+	rij  = sqrt(pow(distx,2)+ pow(disty,2)+ pow(distz,2));
+
+		if(rij<R_HEATAFFECT){
+	        smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
+			temp_neighborEffect=cd*mass*(pj->temp-pi->temp)/pj->dens*smooth_k;
+			//cout<<temp_neighborEffect;
+			//pi->temp_eval+=temp_neighborEffect;
+  			return temp_neighborEffect;
+           }
+		else return 0.0;
 }
 		/*
 void SPHSystem::HeatTransfer(){
@@ -549,8 +574,8 @@ void SPHSystem::HeatTransfer(){
 //}
 int3 SPHSystem::calc_cell_pos(float3 p)
 {
-	int3 cell_pos;
-	cell_pos.x = int(floor((p.x) / cell_size));
+	int3 cell_pos;//0.0043 f
+	cell_pos.x = int(floor((p.x) / cell_size));//0.0399
 	cell_pos.y = int(floor((p.y) / cell_size));
 	cell_pos.z = int(floor((p.z) / cell_size));
 
@@ -581,18 +606,21 @@ void Particle::CalcParticleColor()
 	if (temp < MIN_T) temp = MIN_T;
 	if (temp > MAX_T) temp = MAX_T;
 	
-	if (temp < (MIN_T + 0.25 * dv)) {
+	if (temp < ( MIN_T+ 0.25 * dv)) {
 		RGB.x = 0;
 		RGB.y = 4 * (temp - MIN_T) / dv;
-	} else if (temp < (MIN_T + 0.5 * dv)) 
+	} 
+	else if (temp < (MIN_T + 0.5 * dv)) 
 	{
 		RGB.x = 0.0;
         RGB.z = 1.0 + 4.0 * (MIN_T + 0.25 * dv - temp) / dv;
-	} else if (temp < (MIN_T + 0.75 * dv))
+	} 
+	else if (temp < (MIN_T + 0.75 * dv))
 	{
 		RGB.x = 4.0 * (temp - MIN_T - 0.5 * dv) / dv;
         RGB.z = 0.0;
-	} else {
+	} 
+	else {
 		RGB.y = 1.0 + 4.0 * (MIN_T + 0.75 * dv - temp) / dv;
 		RGB.z = 0.0;
 	}
