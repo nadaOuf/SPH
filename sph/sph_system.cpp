@@ -111,6 +111,10 @@ void SPHSystem::init_system()
 	vel.y=0.0f;
 	vel.z=0.0f;
 
+	pos.x=world_size.x;
+	pos.y=world_size.y;
+	pos.z=world_size.z;
+
 	add_heatSource(pos, 400);
 
 	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
@@ -368,13 +372,13 @@ void SPHSystem::comp_force_adv()
 					if(np==NULL)
 					{//Surface - check heat source
 						float3 dist;
-						dist.x = - testSource.pos.x + p->pos.x;
-						dist.y = - testSource.pos.y + p->pos.y;
-						dist.z = - testSource.pos.z + p->pos.z;
+						dist.x =  testSource.pos.x - p->pos.x;
+						dist.y =  testSource.pos.y - p->pos.y;
+						dist.z =  testSource.pos.z - p->pos.z;
 						float d2 = dist.x*dist.x+dist.y*dist.y+dist.z*dist.z;
 						//change this to ray trace......slow....???
 						if(dist.x*x>=0&&dist.y*y>=0&&dist.z*z>=0)//vector cosin stuff...
-							p->temp += (testSource.temp-p->temp)*time_step*sqrt(d2);
+							p->temp += EPSILON*(testSource.temp-p->temp)*time_step/sqrt(d2);
 					}
 					while(np!=NULL)
 					{
@@ -437,8 +441,8 @@ void SPHSystem::comp_force_adv()
 
 		p->temp += HeatTransferAir(p, dA)*time_step;
 
-		if(p->temp >= 300) //Change state if the temprature exceeds the melting point of water
-			p->state = LIQUID;
+		//if(p->temp >= 300) //Change state if the temprature exceeds the melting point of water
+		//	p->state = LIQUID;
 
 		lplc_color+=self_lplc_color/p->dens;
 		p->surf_norm=sqrt(grad_color.x*grad_color.x+grad_color.y*grad_color.y+grad_color.z*grad_color.z);
@@ -465,10 +469,16 @@ void SPHSystem::advection()
 			p->acc.x = 0;
 			p->acc.y = IceForce_rigid.y*p->dens;
 			p->acc.z = 0;
-
 		}
-		if(p->temp>273)p->state=LIQUID;
-		else p->state=SOLID;
+		//latent heat
+		if(p->state == SOLID) 
+		{
+			if(p->temp>=275) p->state = LIQUID;
+		}
+		if(p->state == LIQUID)
+		{
+			//if(p->temp<=270) p->state = SOLID;
+		}
 		p->vel.x=p->vel.x+p->acc.x*time_step/p->dens+gravity.x*time_step;
 		p->vel.y=p->vel.y+p->acc.y*time_step/p->dens+gravity.y*time_step;
 		p->vel.z=p->vel.z+p->acc.z*time_step/p->dens+gravity.z*time_step;
