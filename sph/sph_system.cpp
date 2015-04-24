@@ -35,7 +35,7 @@ SPHSystem::SPHSystem()
 	world_size.x=0.64f;
 	world_size.y=0.64f;
 	world_size.z=0.64f;
-	cell_size=kernel;
+	cell_size= kernel;
 	grid_size.x=(uint)ceil(world_size.x/cell_size);
 	grid_size.y=(uint)ceil(world_size.y/cell_size);
 	grid_size.z=(uint)ceil(world_size.z/cell_size);
@@ -48,7 +48,7 @@ SPHSystem::SPHSystem()
 	rest_density=1000.0f;
 	gas_constant=1.0f;
 	viscosity=6.5f;
-	time_step=0.003f;
+	time_step= 0.003f;
 	surf_norm=6.0f;
 	surf_coe=0.1f;
 
@@ -158,9 +158,12 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
     //p->particle_color.y = 0;
 	//p->particle_color.z = 0;
 
-	p->temp = 253;
-	p->temp_eval=0;
-	p->CalcParticleColor();
+	p->particle_color.x = 255;
+	p->particle_color.y = 0;
+	p->particle_color.z = 0;
+
+	p->temp = 100;
+
 	num_particle++;
 }
 
@@ -300,8 +303,10 @@ void SPHSystem::comp_force_adv()
 		p->acc.x=0.0f;
 		p->acc.y=0.0f;
 		p->acc.z=0.0f;
+
 /////////////////////////////add particle_heat_transfer...///////////////////////////////
 		/*(for(uint j=0; j<num_particle; j++){
+
 			if(i!=j){
 			Particle *pj;
 			pj=&(mem[j]);
@@ -309,6 +314,7 @@ void SPHSystem::comp_force_adv()
 		
 		    p->CalcParticleColor();
 			}
+
 		}
 		p->temp+=p->temp_eval*time_step;*/
 		//////////////////////////////////////////////////////////////
@@ -331,6 +337,7 @@ void SPHSystem::comp_force_adv()
 			{
 				for(int z=-1; z<=1; z++)
 				{
+
 					near_pos.x=cell_pos.x+x;
 					near_pos.y=cell_pos.y+y;
 					near_pos.z=cell_pos.z+z;
@@ -340,11 +347,27 @@ void SPHSystem::comp_force_adv()
 					{//no neighbor particles, check boundary/rigid
 
 						continue;
-					}
-					++ni; //sum the number of particles surrounding
+
+					}					
+
 					np=cell[hash];
+
+
+					if(np != NULL && (x + y + z != 0) && ((x == 0 && y == 0) || (x == 0 && z == 0) || ( y == 0 && z == 0)))
+						++ni; //sum the number of particles surrounding
+
 					
-					while(np != NULL)
+					
+					if(np==NULL)
+					{//Surface - check heat source
+						float3 dist;
+						dist.x = - testSource.pos.x + p->pos.x;
+						dist.y = - testSource.pos.y + p->pos.y;
+						dist.z = - testSource.pos.z + p->pos.z;
+						if(dist.x*x>=0&&dist.y*y>=0&&dist.z*z>=0)//vector cosin stuff...
+							p->temp=1000;
+					}
+					while(np!=NULL)
 					{
 						p->temp_eval+=HeatTransfer_particle(p, np);
 
@@ -401,10 +424,13 @@ void SPHSystem::comp_force_adv()
 		if(ni > 6) 
 			dA = 0.0f;
 		//Add the heat transfer due to air 
-	//	p->temp += HeatTransferAir(p, dA);
-		////////////////////////////////////////////
-		p->CalcParticleColor();
-		/////////////////////////////////////////////////
+
+
+		p->temp += HeatTransferAir(p, dA)*time_step;
+
+		if(p->temp >= 300) //Change state if the temprature exceeds the melting point of water
+			p->state = LIQUID;
+
 		lplc_color+=self_lplc_color/p->dens;
 		p->surf_norm=sqrt(grad_color.x*grad_color.x+grad_color.y*grad_color.y+grad_color.z*grad_color.z);
 
@@ -495,14 +521,12 @@ float SPHSystem::HeatTransferAir(Particle *p, float dA)
 
 	//Determining the thermal conductivity of the particle depending on its state
 	if(p->state==LIQUID)
-		cd = THERMAL_CONDUCTIVITY_WATER;
+		cd = HEAT_CAPACITY_WATER;
 	if(p->state==SOLID)
-		cd = THERMAL_CONDUCTIVITY_ICE;
-	if(p->state==RIGID)
-		cd = THERMAL_CONDUCTIVITY;
+		cd = HEAT_CAPACITY_ICE;
 
 	//return the temprature change due to air
-	return Q/(cd*mass);
+	return Q/(cd);
 
 }
 float SPHSystem::HeatTransfer_particle(Particle *pj, Particle *pi){
@@ -522,13 +546,16 @@ float SPHSystem::HeatTransfer_particle(Particle *pj, Particle *pi){
 	rij  = sqrt(pow(distx,2)+ pow(disty,2)+ pow(distz,2));
 
 		//if(rij<R_HEATAFFECT){
+
 	        smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
 			temp_neighborEffect=cd*mass*(pj->temp-pi->temp)/pj->dens*smooth_k;
 			//cout<<temp_neighborEffect;
 			//pi->temp_eval+=temp_neighborEffect;
   			return temp_neighborEffect;
+
          //  }
 	//	else return 0.0;
+
 }
 		/*
 void SPHSystem::HeatTransfer(){
