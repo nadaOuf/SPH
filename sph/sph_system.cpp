@@ -47,7 +47,7 @@ SPHSystem::SPHSystem()
 	wall_damping=-0.5f;
 	rest_density=1000.0f;
 	gas_constant=1.0f;
-	viscosity=6.5f;
+	viscosity=2.6f;
 	time_step= 0.003f;
 	surf_norm=6.0f;
 	surf_coe=0.1f;
@@ -99,7 +99,7 @@ void SPHSystem::animation()
 	comp_dens_pres();
 	comp_force_adv();
 	advection();
-//	HeatTransfer();
+
 }
 
 void SPHSystem::init_system()
@@ -115,7 +115,7 @@ void SPHSystem::init_system()
 	pos.y=world_size.y;
 	pos.z=world_size.z;
 
-	add_heatSource(pos, 400);
+	add_heatSource(pos, 320);
 
 	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
 	{
@@ -166,7 +166,7 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 	p->particle_color.y = 0;
 	p->particle_color.z = 0;
 
-	p->temp = 100;
+	p->temp = 200;
 
 	num_particle++;
 }
@@ -308,6 +308,8 @@ void SPHSystem::comp_force_adv()
 	float3 grad_color;
 	float lplc_color;
 
+	bool solid = false;
+
 	Status pState;
 	float ni = 0.0f;
 	for(uint i=0; i<num_particle; i++)
@@ -321,18 +323,22 @@ void SPHSystem::comp_force_adv()
 		p->acc.x=0.0f;
 		p->acc.y=0.0f;
 		p->acc.z=0.0f;
+
 		////////////////***solid-Boundary Checking***/////////////////////////
 		//////////////////////////////////////////////////////////
+
+
 		if(pState==SOLID)
 		{
 			 
 			/////////////////bot///////////
 			if(p->pos.y < 0.0f)
 			{
-				IceForce_rigid.y = -gravity.y - p->vel.y*1.65/time_step;
+				IceForce_rigid.y = -gravity.y - p->vel.y/time_step;
 				IceVelocity.y = p->vel.y*wall_damping;
 				IceDeltPos.y = 0.0 - p->pos.y;
 			}
+
 			////////////////////////top///////////////
 			if(p->pos.y >world_size.y-BOUNDARY){
 			    IceForce_rigid.y = -gravity.y - p->vel.y*1.65/time_step;
@@ -364,6 +370,8 @@ void SPHSystem::comp_force_adv()
 				IceVelocity.z = p->vel.z*wall_damping;
 			    IceDeltPos.z = world_size.z - p->pos.z;
 			}
+
+			solid = true;
 
 		}
 		////////////////////////////////////////////////////////
@@ -410,7 +418,12 @@ void SPHSystem::comp_force_adv()
 						float d2 = dist.x*dist.x+dist.y*dist.y+dist.z*dist.z;
 						//change this to ray trace......slow....???
 						if(dist.x*x>=0&&dist.y*y>=0&&dist.z*z>=0)//vector cosin stuff...
-							p->temp += EPSILON*(testSource.temp-p->temp)*time_step/(d2);
+						{
+							if(p->temp >= 275 && p->state == SOLID)
+								p->heat_fusion += EPSILON*(testSource.temp-p->temp)/(d2);
+							else
+								p->temp += EPSILON*(testSource.temp-p->temp)*time_step/(d2);
+						}
 					}
 					while(np!=NULL)
 					{
@@ -436,9 +449,10 @@ void SPHSystem::comp_force_adv()
 
 							pres_kernel=spiky_value * kernel_r * kernel_r;
 							temp_force=V * (p->pres+np->pres) * pres_kernel;
-							p->acc.x=p->acc.x-rel_pos.x*temp_force/r;
-							p->acc.y=p->acc.y-rel_pos.y*temp_force/r;
-							p->acc.z=p->acc.z-rel_pos.z*temp_force/r;
+							p->acc.x=p->acc.x-rel_pos.x*temp_force/(r*mass);
+							p->acc.y=p->acc.y-rel_pos.y*temp_force/(r*mass);
+							p->acc.z=p->acc.z-rel_pos.z*temp_force/(r*mass);
+
 
 							rel_vel.x=np->ev.x-p->ev.x;
 							rel_vel.y=np->ev.y-p->ev.y;
@@ -446,9 +460,30 @@ void SPHSystem::comp_force_adv()
 
 							visc_kernel=visco_value*(kernel-r);
 							temp_force=V * viscosity * visc_kernel;
-							p->acc.x=p->acc.x + rel_vel.x*temp_force; 
-							p->acc.y=p->acc.y + rel_vel.y*temp_force; 
-							p->acc.z=p->acc.z + rel_vel.z*temp_force; 
+
+
+
+							p->acc.x=p->acc.x + rel_vel.x*temp_force/mass; 
+							p->acc.y=p->acc.y + rel_vel.y*temp_force/mass; 
+							p->acc.z=p->acc.z + rel_vel.z*temp_force/mass; 
+
+							//if((x + y + z != 0) && ((x == 0 && y == 0) || (x == 0 && z == 0) || ( y == 0 && z == 0)))
+							{
+								//interfacial tension fi.
+								if(np->state == LIQUID)
+								{
+									p->acc.x=p->acc.x - rel_pos.x*Kw/(r2*mass); 
+									p->acc.y=p->acc.y - rel_pos.y*Kw/(r2*mass); 
+									p->acc.z=p->acc.z - rel_pos.z*Kw/(r2*mass); 
+								}
+								else if(np->state == SOLID)
+								{
+									p->acc.x=p->acc.x - rel_pos.x*Kice/(r2*mass); 
+									p->acc.y=p->acc.y - rel_pos.y*Kice/(r2*mass); 
+									p->acc.z=p->acc.z - rel_pos.z*Kice/(r2*mass); 
+								}
+
+							}
 
 							float temp=(-1) * grad_poly6 * V * pow(kernel_2-r2, 2);
 							grad_color.x += temp * rel_pos.x;
@@ -464,14 +499,37 @@ void SPHSystem::comp_force_adv()
 				}
 			}
 		}
-		p->temp+=p->temp_eval*time_step;
+
 		float dA = (6 - ni) / 6;
 		if(ni > 6) 
 			dA = 0.0f;
 		//Add the heat transfer due to air 
 
 
-		p->temp += HeatTransferAir(p, dA)*time_step;
+		if(p->temp >= 275 && p->state == SOLID)
+			p->heat_fusion += HeatTransferAir(p, dA) + p->temp_eval;
+		else
+		{
+			float cd = 0.0f;
+
+			if(p->state==LIQUID)
+				cd = THERMAL_CONDUCTIVITY_WATER;
+			if(p->state==SOLID)
+				cd = THERMAL_CONDUCTIVITY_ICE;
+
+			p->temp+= cd*p->temp_eval*time_step;
+
+			//Add the heat transfer due to air 
+			
+			//Determining the thermal conductivity of the particle depending on its state
+			if(p->state==LIQUID)
+				cd = HEAT_CAPACITY_WATER;
+			if(p->state==SOLID)
+				cd = HEAT_CAPACITY_ICE;
+
+
+			p->temp += HeatTransferAir(p, dA)/(cd*mass)*time_step;
+		}
 
 		//if(p->temp >= 300) //Change state if the temprature exceeds the melting point of water
 		//	p->state = LIQUID;
@@ -486,6 +544,9 @@ void SPHSystem::comp_force_adv()
 			p->acc.z+=surf_coe * lplc_color * grad_color.z / p->surf_norm;
 		}
 	}
+
+	if(!solid)
+		viscosity = 0.5f;
 
 }
 
@@ -505,7 +566,11 @@ void SPHSystem::advection()
 		//latent heat
 		if(p->state == SOLID) 
 		{
+
 		//	if(p->temp>=275) p->state = LIQUID;
+
+			if(p->temp>=275 && p->heat_fusion > 300) p->state = LIQUID;
+
 		}
 		if(p->state == LIQUID)
 		{
@@ -574,14 +639,8 @@ float SPHSystem::HeatTransferAir(Particle *p, float dA)
 	float Q = 0.0f, cd = 0.0f;
 	Q = THERMAL_CONDUCTIVITY_AIR * (T_air - p->temp) * dA;
 
-	//Determining the thermal conductivity of the particle depending on its state
-	if(p->state==LIQUID)
-		cd = HEAT_CAPACITY_WATER;
-	if(p->state==SOLID)
-		cd = HEAT_CAPACITY_ICE;
-
 	//return the temprature change due to air
-	return Q/(cd);
+	return Q;
 
 }
 float SPHSystem::HeatTransfer_particle(Particle *pj, Particle *pi){
@@ -594,16 +653,12 @@ float SPHSystem::HeatTransfer_particle(Particle *pj, Particle *pi){
 	disty = pj->pos.y - pi->pos.y;
 	distz = pj->pos.z - pi->pos.z;
 
-	if(pj->state==LIQUID)cd = THERMAL_CONDUCTIVITY_WATER;
-    if(pj->state==SOLID)cd = THERMAL_CONDUCTIVITY_ICE;
-	if(pj->state==RIGID)cd = THERMAL_CONDUCTIVITY;
-
 	rij  = sqrt(pow(distx,2)+ pow(disty,2)+ pow(distz,2));
 
 		//if(rij<R_HEATAFFECT){
 
 	        smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
-			temp_neighborEffect=cd*mass*(pj->temp-pi->temp)/pj->dens*smooth_k;
+			temp_neighborEffect=mass*(pj->temp-pi->temp)/pj->dens*smooth_k;
 			//cout<<temp_neighborEffect;
 			//pi->temp_eval+=temp_neighborEffect;
   			return temp_neighborEffect;
@@ -691,8 +746,8 @@ void Particle::CalcParticleColor()
 	RGB.y = 1;
 	RGB.z = 1;
 
-	if (temp < MIN_T) temp = MIN_T;
-	if (temp > MAX_T) temp = MAX_T;
+	/*if (temp < MIN_T) temp = MIN_T;
+	if (temp > MAX_T) temp = MAX_T;*/
 	
 	if (temp < ( MIN_T+ 0.25 * dv)) {
 		RGB.x = 0;

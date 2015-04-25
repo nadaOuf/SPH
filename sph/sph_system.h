@@ -43,6 +43,7 @@ public:
 	float  temp;           // melting members
 	float  temp_eval;
 	float3 particle_color;
+	float heat_fusion;
 	///////////////////////////////////////////////
 	Particle *next;
 	void CalcParticleColor();
