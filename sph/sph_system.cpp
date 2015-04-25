@@ -115,7 +115,7 @@ void SPHSystem::init_system()
 	pos.y=world_size.y;
 	pos.z=world_size.z;
 
-	add_heatSource(pos, 400);
+	add_heatSource(pos, 320);
 
 	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
 	{
@@ -390,7 +390,12 @@ void SPHSystem::comp_force_adv()
 						float d2 = dist.x*dist.x+dist.y*dist.y+dist.z*dist.z;
 						//change this to ray trace......slow....???
 						if(dist.x*x>=0&&dist.y*y>=0&&dist.z*z>=0)//vector cosin stuff...
-							p->temp += EPSILON*(testSource.temp-p->temp)*time_step/(d2);
+						{
+							if(p->temp >= 275 && p->state == SOLID)
+								p->heat_fusion += EPSILON*(testSource.temp-p->temp)/(d2);
+							else
+								p->temp += EPSILON*(testSource.temp-p->temp)*time_step/(d2);
+						}
 					}
 					while(np!=NULL)
 					{
@@ -711,8 +716,8 @@ void Particle::CalcParticleColor()
 	RGB.y = 1;
 	RGB.z = 1;
 
-	if (temp < MIN_T) temp = MIN_T;
-	if (temp > MAX_T) temp = MAX_T;
+	/*if (temp < MIN_T) temp = MIN_T;
+	if (temp > MAX_T) temp = MAX_T;*/
 	
 	if (temp < ( MIN_T+ 0.25 * dv)) {
 		RGB.x = 0;
