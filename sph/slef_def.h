@@ -17,9 +17,7 @@ static const float MAX_T = 373.0f;
 static const float ICE_T = 273.0f;
 static const float HEAT_CAPACITY_ICE = 2.03f;
 static const float HEAT_CAPACITY_WATER = 4.179f;
-static const float EPSILON = 0.01;
-static const float Kw = 0.5;
-static const float Kice = 2.0;
+static const float EPSILON = 0.1;
 
 //unsigned short m_neighbor[65536];
 
