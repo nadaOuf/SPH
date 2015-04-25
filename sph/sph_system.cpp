@@ -107,7 +107,7 @@ void SPHSystem::init_system()
 	float3 pos;
 	float3 vel;
 
-	vel.x=0.0f;
+	vel.x=2.0f;
 	vel.y=0.0f;
 	vel.z=0.0f;
 
@@ -321,33 +321,53 @@ void SPHSystem::comp_force_adv()
 		p->acc.x=0.0f;
 		p->acc.y=0.0f;
 		p->acc.z=0.0f;
-
-/////////////////////////////add particle_heat_transfer...///////////////////////////////
-		/*(for(uint j=0; j<num_particle; j++){
-
-			if(i!=j){
-			Particle *pj;
-			pj=&(mem[j]);
-			p->temp_eval+=HeatTransfer_particle(p, pj);
-		
-		    p->CalcParticleColor();
-			}
-
-		}
-		p->temp+=p->temp_eval*time_step;*/
-		//////////////////////////////////////////////////////////////
+		////////////////***solid-Boundary Checking***/////////////////////////
+		//////////////////////////////////////////////////////////
 		if(pState==SOLID)
 		{
-			//Boundary Checking.
-			//!!!___other faces later.
+			 
+			/////////////////bot///////////
 			if(p->pos.y < 0.0f)
 			{
 				IceForce_rigid.y = -gravity.y - p->vel.y*1.65/time_step;
 				IceVelocity.y = p->vel.y*wall_damping;
 				IceDeltPos.y = 0.0 - p->pos.y;
 			}
-			
+			////////////////////////top///////////////
+			if(p->pos.y >world_size.y-BOUNDARY){
+			    IceForce_rigid.y = -gravity.y - p->vel.y*1.65/time_step;
+				IceVelocity.y = p->vel.y*wall_damping;
+			   IceDeltPos.y = world_size.y - p->pos.y;
+			}
+			/////////////////////////////////////right//////////
+			if(p->pos.x >world_size.x-BOUNDARY){
+			    IceForce_rigid.x = - p->vel.x*1.65/time_step;
+				IceVelocity.x = p->vel.x*wall_damping;
+			    IceDeltPos.x = world_size.x - p->pos.x;
+			}
+			////////////////left//////////
+			if(p->pos.x <0.0){
+			    IceForce_rigid.x = - p->vel.x*1.65/time_step;
+				IceVelocity.x = p->vel.x*wall_damping;
+			    IceDeltPos.x = 0.0 - p->pos.x;
+			}
+			//////////////////////////front///////
+			if(p->pos.z <0.0){
+			    IceForce_rigid.z = - p->vel.z*1.65/time_step;
+				IceVelocity.z = p->vel.z*wall_damping;
+			    IceDeltPos.z = 0.0 - p->pos.z;
+			}
+
+			//////////////back///////////
+			if(p->pos.x >world_size.z-BOUNDARY){
+			    IceForce_rigid.z = - p->vel.z*1.65/time_step;
+				IceVelocity.z = p->vel.z*wall_damping;
+			    IceDeltPos.z = world_size.z - p->pos.z;
+			}
+
 		}
+		////////////////////////////////////////////////////////
+		//////////////////////////////////
 		grad_color.x=0.0f;
 		grad_color.y=0.0f;
 		grad_color.z=0.0f;
@@ -478,14 +498,14 @@ void SPHSystem::advection()
 		p=&(mem[i]);
 		if(p->state == SOLID)
 		{
-			p->acc.x = 0;
+			p->acc.x = IceForce_rigid.x*p->dens;
 			p->acc.y = IceForce_rigid.y*p->dens;
-			p->acc.z = 0;
+			p->acc.z = IceForce_rigid.z*p->dens;
 		}
 		//latent heat
 		if(p->state == SOLID) 
 		{
-			if(p->temp>=275) p->state = LIQUID;
+		//	if(p->temp>=275) p->state = LIQUID;
 		}
 		if(p->state == LIQUID)
 		{
