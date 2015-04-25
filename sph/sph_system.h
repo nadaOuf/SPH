@@ -31,7 +31,6 @@ public:
 	uint id;
 	float3 pos;
 	float3 vel;
-	float3 w;//angular velovity;
 	float3 acc;
 	float3 ev;
 
@@ -39,10 +38,6 @@ public:
 	float pres;
 
 	float surf_norm;
-	/////////////////////
-	float3 IceForce_fluid;
-	float3 IceForce_rigid;
-	float3 IceForce;
 	////////////////////////***temp****///////////////////////
 	Status state;   
 	float  temp;           // melting members
@@ -74,9 +69,8 @@ public:
 
 	float3 IceForce_fluid;
 	float3 IceForce_rigid;
-	float3 IceForce;
-	float3 gravity;
 
+	float3 gravity;
 	float wall_damping;
 	float rest_density;
 	float gas_constant;
@@ -110,9 +104,8 @@ public:
 	void init_system();
 	void add_particle(float3 pos, float3 vel);
 	void add_heatSource(float3 pos, float T);
-	
+
 private:
-	void resetForce();
 	void build_table();
 	void comp_dens_pres();
 	void comp_force_adv();
