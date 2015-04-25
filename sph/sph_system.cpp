@@ -47,7 +47,7 @@ SPHSystem::SPHSystem()
 	wall_damping=-0.5f;
 	rest_density=1000.0f;
 	gas_constant=1.0f;
-	viscosity=6.7f;
+	viscosity=3.7f;
 	time_step= 0.003f;
 	surf_norm=6.0f;
 	surf_coe=0.1f;
@@ -473,15 +473,15 @@ void SPHSystem::comp_force_adv()
 							if(np->state == LIQUID)
 
 							{
-								p->acc.x=p->acc.x - rel_pos.x*(Kw/r2)*V; 
-								p->acc.y=p->acc.y - rel_pos.y*(Kw/r2)*V;; 
-								p->acc.z=p->acc.z - rel_pos.z*(Kw/r2)*V;; 
+								p->acc.x=p->acc.x - rel_pos.x*(Kw/r2)/mass; 
+								p->acc.y=p->acc.y - rel_pos.y*(Kw/r2)/mass; 
+								p->acc.z=p->acc.z - rel_pos.z*(Kw/r2)/mass; 
 							}
 							else if(np->state == SOLID)
 							{
-								p->acc.x=p->acc.x - rel_pos.x*(Kice/r2)*V;; 
-								p->acc.y=p->acc.y - rel_pos.y*(Kice/r2)*V;; 
-								p->acc.z=p->acc.z - rel_pos.z*(Kice/r2)*V;; 
+								p->acc.x=p->acc.x - rel_pos.x*(Kice/r2)/mass;
+								p->acc.y=p->acc.y - rel_pos.y*(Kice/r2)/mass; 
+								p->acc.z=p->acc.z - rel_pos.z*(Kice/r2)/mass; 
 							}
 							
 
