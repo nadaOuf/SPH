@@ -47,7 +47,7 @@ SPHSystem::SPHSystem()
 	wall_damping=-0.5f;
 	rest_density=1000.0f;
 	gas_constant=1.0f;
-	viscosity=6.5f;
+	viscosity=3.6f; //Change viscosity to be a function of temperature
 	time_step= 0.003f;
 	surf_norm=6.0f;
 	surf_coe=0.1f;
@@ -313,6 +313,8 @@ void SPHSystem::comp_force_adv()
 	float3 grad_color;
 	float lplc_color;
 
+	bool solid  = false;
+
 	Status pState;
 	float ni = 0.0f;
 	for(uint i=0; i<num_particle; i++)
@@ -404,6 +406,7 @@ void SPHSystem::comp_force_adv()
 						p->temp_eval+=HeatTransfer_particle(p, np);
 						if(pState==SOLID)
 						{
+							solid = true;
 							np = np->next;
 							continue;
 						}
@@ -421,7 +424,7 @@ void SPHSystem::comp_force_adv()
 
 							pres_kernel=spiky_value * kernel_r * kernel_r;
 							temp_force=V * (p->pres+np->pres) * pres_kernel;
-							p->acc.x=p->acc.x-rel_pos.x*temp_force/(r*mass);
+							p->acc.x=p->acc.x-rel_pos.x*temp_force/(r*mass); //division by mass wasn't there .. makes ice melting look better 
 							p->acc.y=p->acc.y-rel_pos.y*temp_force/(r*mass);
 							p->acc.z=p->acc.z-rel_pos.z*temp_force/(r*mass);
 
@@ -439,9 +442,9 @@ void SPHSystem::comp_force_adv()
 							{//interfacial tension fi.
 								if(np->state == LIQUID)
 								{
-									p->acc.x=p->acc.x + rel_pos.x*Kw/(r2*mass); 
-									p->acc.y=p->acc.y + rel_pos.y*Kw/(r2*mass); 
-									p->acc.z=p->acc.z + rel_pos.z*Kw/(r2*mass); 
+									p->acc.x=p->acc.x - rel_pos.x*Kw/(r2*mass); 
+									p->acc.y=p->acc.y - rel_pos.y*Kw/(r2*mass); 
+									p->acc.z=p->acc.z - rel_pos.z*Kw/(r2*mass); 
 								}
 								else if(np->state == SOLID)
 								{
@@ -473,10 +476,16 @@ void SPHSystem::comp_force_adv()
 			p->heat_fusion += HeatTransferAir(p, dA) + p->temp_eval;
 		else
 		{
-			p->temp+=p->temp_eval*time_step;
+			float cd = 0.0f;
+			if(p->state==LIQUID)
+				cd = THERMAL_CONDUCTIVITY_WATER;
+			if(p->state==SOLID)
+				cd = THERMAL_CONDUCTIVITY_ICE;
+
+			p->temp+= cd*p->temp_eval*time_step;
 
 			//Add the heat transfer due to air 
-			float cd = 0.0f;
+			
 			//Determining the thermal conductivity of the particle depending on its state
 			if(p->state==LIQUID)
 				cd = HEAT_CAPACITY_WATER;
@@ -495,6 +504,9 @@ void SPHSystem::comp_force_adv()
 			p->acc.y+=surf_coe * lplc_color * grad_color.y / p->surf_norm;
 			p->acc.z+=surf_coe * lplc_color * grad_color.z / p->surf_norm;
 		}
+
+		if(!solid)
+			viscosity = 0.5f;
 	}
 
 }
