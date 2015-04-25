@@ -333,9 +333,6 @@ void SPHSystem::comp_force_adv()
 		////////////////***solid-Boundary Checking***/////////////////////////
 		//////////////////////////////////////////////////////////
 
-
-		}
-		p->temp+=p->temp_eval*time_step;*/
 		//////////////////////////////////////////////////////////////
 		if(pState==SOLID)
 		{
@@ -470,21 +467,20 @@ void SPHSystem::comp_force_adv()
 							p->acc.y=p->acc.y + rel_vel.y*temp_force; 
 							p->acc.z=p->acc.z + rel_vel.z*temp_force; 
 
-							//if((x + y + z != 0) && ((x == 0 && y == 0) || (x == 0 && z == 0) || ( y == 0 && z == 0)))
-							{//interfacial tension fi.
-								if(np->state == LIQUID)
-								{
-									p->acc.x=p->acc.x - rel_pos.x*(Kw/r2)*V; 
-									p->acc.y=p->acc.y - rel_pos.y*(Kw/r2)*V;; 
-									p->acc.z=p->acc.z - rel_pos.z*(Kw/r2)*V;; 
-								}
-								else if(np->state == SOLID)
-								{
-									p->acc.x=p->acc.x - rel_pos.x*(Kice/r2)*V;; 
-									p->acc.y=p->acc.y - rel_pos.y*(Kice/r2)*V;; 
-									p->acc.z=p->acc.z - rel_pos.z*(Kice/r2)*V;; 
-								}
+							//interfacial tension fi.
+							if(np->state == LIQUID)
+							{
+								p->acc.x=p->acc.x - rel_pos.x*(Kw/r2)*V; 
+								p->acc.y=p->acc.y - rel_pos.y*(Kw/r2)*V;; 
+								p->acc.z=p->acc.z - rel_pos.z*(Kw/r2)*V;; 
 							}
+							else if(np->state == SOLID)
+							{
+								p->acc.x=p->acc.x - rel_pos.x*(Kice/r2)*V;; 
+								p->acc.y=p->acc.y - rel_pos.y*(Kice/r2)*V;; 
+								p->acc.z=p->acc.z - rel_pos.z*(Kice/r2)*V;; 
+							}
+							
 
 							float temp=(-1) * grad_poly6 * V * pow(kernel_2-r2, 2);
 							grad_color.x += temp * rel_pos.x;
@@ -505,30 +501,28 @@ void SPHSystem::comp_force_adv()
 		if(ni > 6) 
 			dA = 0.0f;
 
-		
-		{
-			float cd = 0.0f;
-			if(p->state==LIQUID)
-				cd = THERMAL_CONDUCTIVITY_WATER;
-			if(p->state==SOLID)
-				cd = THERMAL_CONDUCTIVITY_ICE;
-			if(p->temp >= 275 && p->state == SOLID)
-				p->heat_fusion += cd*p->temp_eval;
-			else
-				p->temp+= cd*p->temp_eval*time_step;
+		float cd = 0.0f;
+		if(p->state==LIQUID)
+			cd = THERMAL_CONDUCTIVITY_WATER;
+		if(p->state==SOLID)
+			cd = THERMAL_CONDUCTIVITY_ICE;
+		if(p->temp >= 275 && p->state == SOLID)
+			p->heat_fusion += cd*p->temp_eval;
+		else
+			p->temp+= cd*p->temp_eval*time_step;
 
-			//Add the heat transfer due to air 
+		//Add the heat transfer due to air 
 			
-			//Determining the thermal conductivity of the particle depending on its state
-			if(p->state==LIQUID)
-				cd = HEAT_CAPACITY_WATER;
-			if(p->state==SOLID)
-				cd = HEAT_CAPACITY_ICE;
-			if(p->temp >= 275 && p->state == SOLID)
-				p->heat_fusion += (HeatTransferAir(p, dA)/(cd*mass));//+ p->temp_eval;
-			else
-				p->temp += (HeatTransferAir(p, dA)/(cd*mass))*time_step;
-		}
+		//Determining the thermal conductivity of the particle depending on its state
+		if(p->state==LIQUID)
+			cd = HEAT_CAPACITY_WATER;
+		if(p->state==SOLID)
+			cd = HEAT_CAPACITY_ICE;
+		if(p->temp >= 275 && p->state == SOLID)
+			p->heat_fusion += (HeatTransferAir(p, dA)/(cd*mass));//+ p->temp_eval;
+		else
+			p->temp += (HeatTransferAir(p, dA)/(cd*mass))*time_step;
+		
 
 		lplc_color+=self_lplc_color/p->dens;
 		p->surf_norm=sqrt(grad_color.x*grad_color.x+grad_color.y*grad_color.y+grad_color.z*grad_color.z);
