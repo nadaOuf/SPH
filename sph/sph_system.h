@@ -69,6 +69,10 @@ public:
 	float3 IceDeltPos;
 
 	float3 IceForce_fluid;
+
+	float3 IceForce_pre;
+	float3 IceForce_vis;
+
 	float3 IceForce_rigid;
 
 	float3 gravity;
@@ -97,6 +101,8 @@ public:
 	Particle **cell;
 
 	uint sys_running;
+
+	uint Nice;
 
 public:
 	SPHSystem();
