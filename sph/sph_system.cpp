@@ -416,9 +416,9 @@ void SPHSystem::comp_force_adv()
 
 							pres_kernel=spiky_value * kernel_r * kernel_r;
 							temp_force=V * (p->pres+np->pres) * pres_kernel;
-							p->acc.x=p->acc.x-rel_pos.x*temp_force/(r*mass);
-							p->acc.y=p->acc.y-rel_pos.y*temp_force/(r*mass);
-							p->acc.z=p->acc.z-rel_pos.z*temp_force/(r*mass);
+							p->acc.x=p->acc.x-rel_pos.x*temp_force/r;
+							p->acc.y=p->acc.y-rel_pos.y*temp_force/r;
+							p->acc.z=p->acc.z-rel_pos.z*temp_force/r;
 
 
 							rel_vel.x=np->ev.x-p->ev.x;
@@ -428,25 +428,28 @@ void SPHSystem::comp_force_adv()
 							visc_kernel=visco_value*(kernel-r);
 							temp_force=V * viscosity * visc_kernel;
 
+
 							p->acc.x=p->acc.x + rel_vel.x*temp_force/mass; 
 							p->acc.y=p->acc.y + rel_vel.y*temp_force/mass; 
 							p->acc.z=p->acc.z + rel_vel.z*temp_force/mass; 
 
 							if((x + y + z != 0) && ((x == 0 && y == 0) || (x == 0 && z == 0) || ( y == 0 && z == 0)))
-							{//interfacial tension fi.
-								if(np->state == LIQUID)
-								{
-									p->acc.x=p->acc.x + rel_pos.x*Kw/(r2*mass); 
-									p->acc.y=p->acc.y + rel_pos.y*Kw/(r2*mass); 
-									p->acc.z=p->acc.z + rel_pos.z*Kw/(r2*mass); 
-								}
-								else if(np->state == SOLID)
-								{
-									p->acc.x=p->acc.x - rel_pos.x*Kice/(r2*mass); 
-									p->acc.y=p->acc.y - rel_pos.y*Kice/(r2*mass); 
-									p->acc.z=p->acc.z - rel_pos.z*Kice/(r2*mass); 
-								}
+							{
+
+							//interfacial tension fi.
+							if(np->state == LIQUID)
+							{
+								p->acc.x=p->acc.x - rel_pos.x*Kw/(r2*mass); 
+								p->acc.y=p->acc.y - rel_pos.y*Kw/(r2*mass); 
+								p->acc.z=p->acc.z - rel_pos.z*Kw/(r2*mass); 
 							}
+							else if(np->state == SOLID)
+							{
+								p->acc.x=p->acc.x - rel_pos.x*Kice/(r2*mass); 
+								p->acc.y=p->acc.y - rel_pos.y*Kice/(r2*mass); 
+								p->acc.z=p->acc.z - rel_pos.z*Kice/(r2*mass); 
+							}
+}
 
 							float temp=(-1) * grad_poly6 * V * pow(kernel_2-r2, 2);
 							grad_color.x += temp * rel_pos.x;
