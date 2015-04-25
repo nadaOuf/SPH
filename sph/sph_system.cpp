@@ -320,7 +320,6 @@ void SPHSystem::comp_force_adv()
 	float ni = 0.0f;
 	for(uint i=0; i<num_particle; i++)
 	{
-		Nice = 0;
 		ni = 0.0f;
 		p=&(mem[i]); 
 		cell_pos=calc_cell_pos(p->pos);
@@ -391,7 +390,6 @@ void SPHSystem::comp_force_adv()
 			{
 				for(int z=-1; z<=1; z++)
 				{
-
 					near_pos.x=cell_pos.x+x;
 					near_pos.y=cell_pos.y+y;
 					near_pos.z=cell_pos.z+z;
@@ -429,11 +427,6 @@ void SPHSystem::comp_force_adv()
 					{
 						p->temp_eval+=HeatTransfer_particle(p, np);
 						//cout << p->temp_eval << endl;
-						if(pState==SOLID)
-						{
-							np = np->next;
-							continue;
-						}
 						//if(pState)
 						rel_pos.x=p->pos.x-np->pos.x;
 						rel_pos.y=p->pos.y-np->pos.y;
@@ -448,8 +441,6 @@ void SPHSystem::comp_force_adv()
 
 							pres_kernel=spiky_value * kernel_r * kernel_r;
 							temp_force=V * (p->pres+np->pres) * pres_kernel;
-
-							
 
 							p->acc.x=p->acc.x-rel_pos.x*temp_force/r;
 							p->acc.y=p->acc.y-rel_pos.y*temp_force/r;
@@ -470,11 +461,11 @@ void SPHSystem::comp_force_adv()
 							float vis = temp_force/mass;
 							vis = 0;
 							
-							if(p->state==SOLID) 
+							if(p->state==SOLID&&np->state==LIQUID) 
 							{
-								//IceForce_fluid.x += rel_vel.x*(vis+pre);
-								//IceForce_fluid.y += rel_vel.y*(vis+pre);
-								//IceForce_fluid.z += rel_vel.z*(vis+pre);
+								IceForce_fluid.x += rel_vel.x*(vis+pre)*mass;
+								IceForce_fluid.y += rel_vel.y*(vis+pre)*mass;
+								IceForce_fluid.z += rel_vel.z*(vis+pre)*mass;
 							}
 
 							//if((x + y + z != 0) && ((x == 0 && y == 0) || (x == 0 && z == 0) || ( y == 0 && z == 0)))
@@ -555,6 +546,7 @@ void SPHSystem::comp_force_adv()
 void SPHSystem::advection()
 {
 	int temp_Nice = Nice;
+	//cout<<temp_Nice<<endl;
 	N_ice = 0;
 	N_w = 0;
 	Particle *p;
@@ -564,35 +556,24 @@ void SPHSystem::advection()
 
 		if(p->state == SOLID)
 		{
-			p->acc.x = (IceForce_fluid.x) + (IceForce_rigid.x)*p->dens;
-			p->acc.y = (IceForce_fluid.y) + (IceForce_rigid.y)*p->dens;
-			p->acc.z = (IceForce_fluid.z) + (IceForce_rigid.z)*p->dens;
+			p->acc.x = (IceForce_fluid.x)/(temp_Nice+1) + (IceForce_rigid.x)*p->dens;
+			p->acc.y = (IceForce_fluid.y)/(temp_Nice+1) + (IceForce_rigid.y)*p->dens;
+			p->acc.z = (IceForce_fluid.z)/(temp_Nice+1) + (IceForce_rigid.z)*p->dens;
 		}
 		//latent heat
 		if(p->state == SOLID) 
 		{
-
-		//	if(p->temp>=275) p->state = LIQUID;
-
 			if(p->temp>=275 && p->heat_fusion > 300)
 			{
 				p->state = LIQUID;
-				Nice--;
 			}
 
 		}
 		if(p->state == LIQUID)
 		{
 			N_w++;
-			//if(p->temp<=270) p->state = SOLID;
 		}
-		if(p->state == SOLID)
-		{
-			p->acc.x = 0;
-			p->acc.y = IceForce_rigid.y*p->dens;
-			p->acc.z = 0;
-			//continue;//test!!!!!!!
-		}
+
 		p->vel.x=p->vel.x+p->acc.x*time_step/p->dens+gravity.x*time_step;
 		p->vel.y=p->vel.y+p->acc.y*time_step/p->dens+gravity.y*time_step;
 		p->vel.z=p->vel.z+p->acc.z*time_step/p->dens+gravity.z*time_step;
