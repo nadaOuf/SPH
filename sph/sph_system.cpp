@@ -47,7 +47,7 @@ SPHSystem::SPHSystem()
 	wall_damping=-0.5f;
 	rest_density=1000.0f;
 	gas_constant=1.0f;
-	viscosity=1.6f;
+	viscosity=2.6f;
 	time_step= 0.003f;
 	surf_norm=6.0f;
 	surf_coe=0.1f;
@@ -166,7 +166,7 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 	p->particle_color.y = 0;
 	p->particle_color.z = 0;
 
-	p->temp = 100;
+	p->temp = 200;
 
 	num_particle++;
 }
@@ -331,7 +331,7 @@ void SPHSystem::comp_force_adv()
 			//!!!___other faces later.
 			if(p->pos.y < 0.0f)
 			{
-				IceForce_rigid.y = -gravity.y - p->vel.y*1.65/time_step;
+				IceForce_rigid.y = -gravity.y - p->vel.y/time_step;
 				IceVelocity.y = p->vel.y*wall_damping;
 				IceDeltPos.y = 0.0 - p->pos.y;
 			}
@@ -359,6 +359,7 @@ void SPHSystem::comp_force_adv()
 					{
 						//no neighbor particles :
 						//1. check boundary/rigid
+						ni =  7;
 						continue;
 
 					}					
@@ -469,7 +470,7 @@ void SPHSystem::comp_force_adv()
 
 
 		if(p->temp >= 275 && p->state == SOLID)
-			p->heat_fusion += (HeatTransferAir(p, dA) + p->temp_eval)*time_step;
+			p->heat_fusion += HeatTransferAir(p, dA) + p->temp_eval;
 		else
 		{
 			float cd = 0.0f;
@@ -528,7 +529,7 @@ void SPHSystem::advection()
 		//latent heat
 		if(p->state == SOLID) 
 		{
-			if(p->temp>=275) p->state = LIQUID;
+			if(p->temp>=275 && p->heat_fusion > 300) p->state = LIQUID;
 		}
 		if(p->state == LIQUID)
 		{
