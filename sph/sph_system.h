@@ -42,8 +42,8 @@ public:
 	Status state;   
 	float  temp;           // melting members
 	float  temp_eval;
-	float3 particle_color;
 	float heat_fusion;
+	float3 particle_color;
 	///////////////////////////////////////////////
 	Particle *next;
 	void CalcParticleColor();
@@ -90,6 +90,9 @@ public:
 	float kernel_2;
 	float self_dens;
 	float self_lplc_color;
+
+	int N_ice;
+	int N_w;
 
 	Particle *mem;
 	Particle testSource;
