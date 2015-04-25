@@ -18,7 +18,7 @@ static const float ICE_T = 273.0f;
 static const float HEAT_CAPACITY_ICE = 2.03f;
 static const float HEAT_CAPACITY_WATER = 4.179f;
 
-static const float EPSILON = 0.01;
+static const float EPSILON = 0.1;
 
 static const float Kw = 0.5f;
 static const float Kice = 2.0f;

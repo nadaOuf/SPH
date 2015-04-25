@@ -111,9 +111,9 @@ void SPHSystem::init_system()
 	vel.y=0.0f;
 	vel.z=0.0f;
 
-	pos.x=world_size.x;
-	pos.y=world_size.y;
-	pos.z=world_size.z;
+	pos.x=0;//world_size.x;
+	pos.y=world_size.y/2;
+	pos.z=0;//world_size.z;
 
 	add_heatSource(pos, 400);
 
@@ -445,7 +445,7 @@ void SPHSystem::comp_force_adv()
 							p->acc.x=p->acc.x-rel_pos.x*temp_force/r;
 							p->acc.y=p->acc.y-rel_pos.y*temp_force/r;
 							p->acc.z=p->acc.z-rel_pos.z*temp_force/r;
-							float pre = temp_force/(r*mass);
+							float pre = temp_force/(r);
 
 							rel_vel.x=np->ev.x-p->ev.x;
 							rel_vel.y=np->ev.y-p->ev.y;
@@ -458,14 +458,14 @@ void SPHSystem::comp_force_adv()
 							p->acc.y=p->acc.y + rel_vel.y*temp_force; 
 							p->acc.z=p->acc.z + rel_vel.z*temp_force; 
 
-							float vis = temp_force/mass;
-							vis = 0;
+							float vis = temp_force;
+							//vis = 0;
 							
-							if(p->state==SOLID&&np->state==LIQUID) 
+							if(p->state==SOLID && np->state==LIQUID) 
 							{
-								IceForce_fluid.x += rel_vel.x*(vis+pre)*mass;
-								IceForce_fluid.y += rel_vel.y*(vis+pre)*mass;
-								IceForce_fluid.z += rel_vel.z*(vis+pre)*mass;
+								IceForce_fluid.x -= 1.5*rel_vel.x*(vis+pre)/np->dens;
+								IceForce_fluid.y -= 1*rel_vel.y*(vis+pre)/np->dens;
+								IceForce_fluid.z -= 1.5*rel_vel.z*(vis+pre)/np->dens;
 							}
 
 							//if((x + y + z != 0) && ((x == 0 && y == 0) || (x == 0 && z == 0) || ( y == 0 && z == 0)))
