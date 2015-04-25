@@ -47,7 +47,7 @@ SPHSystem::SPHSystem()
 	wall_damping=-0.5f;
 	rest_density=1000.0f;
 	gas_constant=1.0f;
-	viscosity=6.5f;
+	viscosity=1.6f;
 	time_step= 0.003f;
 	surf_norm=6.0f;
 	surf_coe=0.1f;
@@ -308,6 +308,8 @@ void SPHSystem::comp_force_adv()
 	float3 grad_color;
 	float lplc_color;
 
+	bool solid = false;
+
 	Status pState;
 	float ni = 0.0f;
 	for(uint i=0; i<num_particle; i++)
@@ -322,20 +324,7 @@ void SPHSystem::comp_force_adv()
 		p->acc.y=0.0f;
 		p->acc.z=0.0f;
 
-/////////////////////////////add particle_heat_transfer...///////////////////////////////
-		/*(for(uint j=0; j<num_particle; j++){
 
-			if(i!=j){
-			Particle *pj;
-			pj=&(mem[j]);
-			p->temp_eval+=HeatTransfer_particle(p, pj);
-		
-		    p->CalcParticleColor();
-			}
-
-		}
-		p->temp+=p->temp_eval*time_step;*/
-		//////////////////////////////////////////////////////////////
 		if(pState==SOLID)
 		{
 			//Boundary Checking.
@@ -346,6 +335,7 @@ void SPHSystem::comp_force_adv()
 				IceVelocity.y = p->vel.y*wall_damping;
 				IceDeltPos.y = 0.0 - p->pos.y;
 			}
+			solid = true;
 			
 		}
 		grad_color.x=0.0f;
@@ -511,6 +501,9 @@ void SPHSystem::comp_force_adv()
 			p->acc.z+=surf_coe * lplc_color * grad_color.z / p->surf_norm;
 		}
 	}
+
+	if(!solid)
+		viscosity = 0.5f;
 
 }
 
