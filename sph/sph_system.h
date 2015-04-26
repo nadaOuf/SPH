@@ -42,8 +42,8 @@ public:
 	Status state;   
 	float  temp;           // melting members
 	float  temp_eval;
-	float3 particle_color;
 	float heat_fusion;
+	float3 particle_color;
 	///////////////////////////////////////////////
 	Particle *next;
 	void CalcParticleColor();
@@ -69,6 +69,10 @@ public:
 	float3 IceDeltPos;
 
 	float3 IceForce_fluid;
+
+	float3 IceForce_pre;
+	float3 IceForce_vis;
+
 	float3 IceForce_rigid;
 
 	float3 gravity;
@@ -91,12 +95,17 @@ public:
 	float self_dens;
 	float self_lplc_color;
 
+	int N_ice;
+	int N_w;
+
 	Particle *mem;
 	Particle testSource;
 	Particle *sPhoton;
 	Particle **cell;
 
 	uint sys_running;
+
+	uint Nice;
 
 public:
 	SPHSystem();
