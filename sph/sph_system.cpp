@@ -453,6 +453,13 @@ void SPHSystem::comp_force_adv()
 							p->acc.y=p->acc.y-rel_pos.y*temp_force/(r*mass);
 							p->acc.z=p->acc.z-rel_pos.z*temp_force/(r*mass);
 
+<<<<<<< HEAD
+=======
+							p->acc.x=p->acc.x-rel_pos.x*temp_force/r;
+							p->acc.y=p->acc.y-rel_pos.y*temp_force/r;
+							p->acc.z=p->acc.z-rel_pos.z*temp_force/r;
+							float pre = temp_force/(r*mass);
+>>>>>>> parent of 8821a1e... Floating force
 
 							rel_vel.x=np->ev.x-p->ev.x;
 							rel_vel.y=np->ev.y-p->ev.y;
@@ -460,6 +467,22 @@ void SPHSystem::comp_force_adv()
 
 							visc_kernel=visco_value*(kernel-r);
 							temp_force=V * viscosity * visc_kernel;
+<<<<<<< HEAD
+=======
+							p->acc.x=p->acc.x + rel_vel.x*temp_force; 
+							p->acc.y=p->acc.y + rel_vel.y*temp_force; 
+							p->acc.z=p->acc.z + rel_vel.z*temp_force; 
+
+							float vis = temp_force/mass;
+							vis = 0;
+							
+							if(p->state==SOLID&&np->state==LIQUID) 
+							{
+								IceForce_fluid.x += rel_vel.x*(vis+pre)*mass;
+								IceForce_fluid.y += rel_vel.y*(vis+pre)*mass;
+								IceForce_fluid.z += rel_vel.z*(vis+pre)*mass;
+							}
+>>>>>>> parent of 8821a1e... Floating force
 
 
 
