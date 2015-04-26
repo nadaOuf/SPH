@@ -69,11 +69,11 @@ public:
 	float3 IceDeltPos;
 
 	float3 IceForce_fluid;
-
+	float3 IceForce_rigid;
 	float3 IceForce_pre;
 	float3 IceForce_vis;
+	float3 IceForce;
 
-	float3 IceForce_rigid;
 
 	float3 gravity;
 	float wall_damping;
@@ -120,6 +120,7 @@ private:
 	void comp_dens_pres();
 	void comp_force_adv();
 	void advection();
+	void compute_Torque();
 	void HeatAdvect(Particle *p);
 	//void SetColor();
 	float HeatTransfer_particle(Particle *pi, Particle *pj);

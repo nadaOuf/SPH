@@ -656,7 +656,10 @@ void SPHSystem::advection()
 	}
 	p->CalcParticleColor();
 }
-
+void SPHSystem::compute_Torque(){
+	//IceForce= IceForce_rigid+IceForce_fluid;
+//
+}
 float SPHSystem::HeatTransferAir(Particle *p, float dA)
 {
 	//First calculate Q
@@ -692,36 +695,7 @@ float SPHSystem::HeatTransfer_particle(Particle *pj, Particle *pi){
 	//	else return 0.0;
 
 }
-		/*
-void SPHSystem::HeatTransfer(){
-	///////////////////////////from neightbor////////////////////////
-	Particle *pi,*pj;//R_HEATAFFECT
-	float distx,disty,distz;
-    float rij;
-	float cd;
-	//float
-	//vector<float>tt;
-	float temp_neighborEffect;
-	for(uint j=0; j<num_particle; j++)
-		for(uint i=0; i<num_particle; i++)
-	{
-		pi=&(mem[i]);
-		pj=&(mem[j]);
-		distx = pj->pos.x - pi->pos.x;
-	    disty = pj->pos.y - pi->pos.y;
-	    distz = pj->pos.z - pi->pos.z;
-		rij  = sqrt(pow(distx,2)+ pow(disty,2)+ pow(distz,2));
-		if(rij<R_HEATAFFECT){
-			//tt.push_back(i);
-	        if(pj->state==LIQUID)cd = THERMAL_CONDUCTIVITY_WATER;
-	        if(pj->state==SOLID)cd = THERMAL_CONDUCTIVITY_ICE;
-	        if(pj->state==RIGID)cd = THERMAL_CONDUCTIVITY;
-	        float smooth_k=45.0/(PI*pow(R_HEATAFFECT,6))*(R_HEATAFFECT-rij);
-			temp_neighborEffect=cd*mass*(pj->temp-pi->temp)/pj->dens;
-			pi->temp_eval+=temp_neighborEffect;
-		}
-	}
-}*/
+	
 
 //void SPHSystem::_SetColor(){
 	/*Particle *p;
