@@ -112,7 +112,7 @@ public:
 	~SPHSystem();
 	void animation();
 	void init_system();
-	void add_particle(float3 pos, float3 vel);
+	void add_particle(float3 pos, float3 vel, float T);
 	void add_heatSource(float3 pos, float T);
 
 private:

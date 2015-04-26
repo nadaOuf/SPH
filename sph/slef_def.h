@@ -22,6 +22,7 @@ static const float EPSILON = 0.01;
 
 static const float Kw = 0.5f;
 static const float Kice = 2.0f;
+//static const float Bounce = 1.6f;
 
 //unsigned short m_neighbor[65536];
 

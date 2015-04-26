@@ -296,7 +296,7 @@ void drawSphere(GLfloat xx, GLfloat yy, GLfloat zz, GLfloat radius, GLfloat M, G
 }  
 void render_particles()
 {
-	glColor3f(0.0f, 0.0f, 1.0f);
+    glColor3f(0.0f, 0.0f, 1.0f);
 	for(uint i=0; i<sph->num_particle; i++)
 	{
 		sph->mem[i].CalcParticleColor();
