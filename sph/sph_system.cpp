@@ -145,7 +145,7 @@ void SPHSystem::init_system()
 		{
 			for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.4f; pos.z+=(kernel*0.5f))
 			{
-				add_particle(pos, vel);
+				add_particle(pos, vel, 200);
 			}
 		}
 	for(pos.x=world_size.x*0.3f+kernel*0.5f; pos.x<world_size.x*0.5f; pos.x+=(kernel*0.5f))//x*0.3,x*0.4
@@ -153,7 +153,7 @@ void SPHSystem::init_system()
 			{
 				for(pos.y=world_size.y*0.5f; pos.y<world_size.y*0.6f; pos.y+=(kernel*0.5f))
 		{
-				add_particle(pos, vel);
+				add_particle(pos, vel,200);
 			}
 		}
 	for(pos.x=world_size.x*0.5f+kernel*0.5f; pos.x<world_size.x*0.65f; pos.x+=(kernel*0.5f))
@@ -161,7 +161,7 @@ void SPHSystem::init_system()
 		{
 			for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.4f; pos.z+=(kernel*0.5f))
 			{
-				add_particle(pos, vel);
+				add_particle(pos, vel,200);
 			}
 		}
 	printf("Init Particle: %u\n", num_particle);
