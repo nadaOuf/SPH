@@ -454,7 +454,10 @@ void SPHSystem::comp_force_adv()
 							p->acc.y=p->acc.y-rel_pos.y*temp_force/r;
 							p->acc.z=p->acc.z-rel_pos.z*temp_force/r;
 							float pre = temp_force/(r*mass);
+<<<<<<< HEAD
 //>>>>>>> parent of 8821a1e... Floating force
+=======
+>>>>>>> parent of 8821a1e... Floating force
 
 							rel_vel.x=np->ev.x-p->ev.x;
 							rel_vel.y=np->ev.y-p->ev.y;
