@@ -89,12 +89,35 @@ SPHSystem::~SPHSystem()
 	free(cell);
 }
 
+int tt = 0;
+
 void SPHSystem::animation()
 {
+	//tt++;
 	if(sys_running == 0)
 	{
 		return;
 	}
+	float3 pos,vel;
+	//pos.x = 0;
+	pos.y = world_size.y;
+	//pos.z = 0;
+	vel.x = 0;
+	vel.y = -1;
+	vel.z = 0;
+	/*
+	if(tt%3==0)
+	for(pos.x=world_size.x*0.00f; pos.x<world_size.x*0.15f; pos.x+=(kernel*0.7f))
+	{
+		//for(pos.y=world_size.y*0.00f; pos.y<world_size.y*0.1f; pos.y+=(kernel*0.5f))
+		{
+			for(pos.z=world_size.z*0.00f; pos.z<world_size.z*0.15f; pos.z+=(kernel*0.7f))
+			{
+				add_particle(pos, vel , 800);
+			}
+		}
+	}*/
+
 	build_table();
 	comp_dens_pres();
 	comp_force_adv();
@@ -117,13 +140,13 @@ void SPHSystem::init_system()
 
 	add_heatSource(pos, 400);
 
-	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
+	for(pos.x=world_size.x*0.05f; pos.x<world_size.x*0.5f; pos.x+=(kernel*0.5f))
 	{
-		for(pos.y=world_size.y*0.3f; pos.y<world_size.y*0.9f; pos.y+=(kernel*0.5f))
+		for(pos.y=world_size.y*0.0f; pos.y<world_size.y*0.5f; pos.y+=(kernel*0.5f))
 		{
-			for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.6f; pos.z+=(kernel*0.5f))
+			for(pos.z=world_size.z*0.05f; pos.z<world_size.z*0.5f; pos.z+=(kernel*0.5f))
 			{
-				add_particle(pos, vel);
+				add_particle(pos, vel , 200);
 			}
 		}
 	}
@@ -139,7 +162,7 @@ void SPHSystem::init_system()
 	printf("Init Particle: %u\n", num_particle);
 }
 
-void SPHSystem::add_particle(float3 pos, float3 vel)
+void SPHSystem::add_particle(float3 pos, float3 vel, float T)
 {
 	Particle *p=&(mem[num_particle]);
 
@@ -160,16 +183,22 @@ void SPHSystem::add_particle(float3 pos, float3 vel)
 
 	p->next=NULL;
 
-	p->state = SOLID;
-
 	p->particle_color.x = 255;
 	p->particle_color.y = 0;
 	p->particle_color.z = 0;
 
-	p->temp = 0;
+	p->temp = T ;
 
-	if(p->temp<=273) N_ice++;
-	else N_w++;
+	if(p->temp<=273)
+	{
+		N_ice++;
+		p->state = SOLID;
+	}
+	else
+	{
+		N_w++;
+		p->state = LIQUID;
+	}
 
 	p->heat_fusion = 0;
 
@@ -460,12 +489,12 @@ void SPHSystem::comp_force_adv()
 
 							float vis = temp_force;
 							//vis = 0;
-							
+							// Interfacial intension
 							if(p->state==SOLID && np->state==LIQUID) 
 							{
-								IceForce_fluid.x -= 1.5*rel_vel.x*(vis+pre)/np->dens;
+								IceForce_fluid.x -= 1.4*rel_vel.x*(vis+pre)/np->dens;
 								IceForce_fluid.y -= 1*rel_vel.y*(vis+pre)/np->dens;
-								IceForce_fluid.z -= 1.5*rel_vel.z*(vis+pre)/np->dens;
+								IceForce_fluid.z -= 1.4*rel_vel.z*(vis+pre)/np->dens;
 							}
 
 							//if((x + y + z != 0) && ((x == 0 && y == 0) || (x == 0 && z == 0) || ( y == 0 && z == 0)))
@@ -659,7 +688,7 @@ float SPHSystem::HeatTransfer_particle(Particle *pj, Particle *pi){
 	if(rij<R_HEATAFFECT){
 
 			smooth_k=(45.0/(PI*pow(R_HEATAFFECT,6)))*(R_HEATAFFECT-rij);
-			temp_neighborEffect= mass*(pj->temp-pi->temp)*smooth_k/pj->dens;
+			temp_neighborEffect= -1*mass*(pj->temp-pi->temp)*smooth_k/pj->dens;
 			//cout<<temp_neighborEffect << endl;
 			//pi->temp_eval+=temp_neighborEffect;
   			return temp_neighborEffect;
