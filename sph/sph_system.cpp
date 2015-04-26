@@ -117,7 +117,7 @@ void SPHSystem::init_system()
 
 	add_heatSource(pos, 400);
 
-	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
+/*	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
 	{
 		for(pos.y=world_size.y*0.3f; pos.y<world_size.y*0.9f; pos.y+=(kernel*0.5f))
 		{
@@ -126,7 +126,31 @@ void SPHSystem::init_system()
 				add_particle(pos, vel);
 			}
 		}
-	}
+	}*/
+	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.3f; pos.x+=(kernel*0.5f))
+		for(pos.y=world_size.y*0.3f; pos.y<world_size.y*0.8f; pos.y+=(kernel*0.5f))
+		{
+			for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.4f; pos.z+=(kernel*0.5f))
+			{
+				add_particle(pos, vel);
+			}
+		}
+	for(pos.x=world_size.x*0.3f+kernel*0.5f; pos.x<world_size.x*0.5f; pos.x+=(kernel*0.5f))//x*0.3,x*0.4
+			for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.4f; pos.z+=(kernel*0.5f))
+			{
+				for(pos.y=world_size.y*0.5f; pos.y<world_size.y*0.6f; pos.y+=(kernel*0.5f))
+		{
+				add_particle(pos, vel);
+			}
+		}
+	for(pos.x=world_size.x*0.5f+kernel*0.5f; pos.x<world_size.x*0.65f; pos.x+=(kernel*0.5f))
+		for(pos.y=world_size.y*0.3f; pos.y<world_size.y*0.8f; pos.y+=(kernel*0.5f))
+		{
+			for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.4f; pos.z+=(kernel*0.5f))
+			{
+				add_particle(pos, vel);
+			}
+		}
 	////////////////////////////add particle temp test///////////
 	for(int i=0;i<0;i++){
 	Particle *p=&(mem[i]);
@@ -339,7 +363,7 @@ void SPHSystem::comp_force_adv()
 			/////////////////bot///////////
 			if(p->pos.y < 0.0f)
 			{
-				IceForce_rigid.y = -gravity.y - p->vel.y/time_step;
+				IceForce_rigid.y = -gravity.y - p->vel.y*Bounce/time_step;
 				IceVelocity.y = p->vel.y*wall_damping;
 				IceDeltPos.y = 0.0 - p->pos.y;
 			}

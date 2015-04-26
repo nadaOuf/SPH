@@ -17,7 +17,7 @@ static const float MAX_T = 373.0f;
 static const float ICE_T = 273.0f;
 static const float HEAT_CAPACITY_ICE = 2.03f;
 static const float HEAT_CAPACITY_WATER = 4.179f;
-
+static const float Bounce =1.65;
 static const float EPSILON = 0.01;
 
 static const float Kw = 0.5f;
