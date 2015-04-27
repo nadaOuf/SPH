@@ -27,8 +27,7 @@
 #include  <GL\glut.h>
 #include "slef_def.h"
 
-
-//#pragma comment(lib, "glew32.lib") 
+#pragma comment(lib, "glew32.lib") 
 
 SPHSystem *sph;
 
@@ -171,7 +170,7 @@ void init_sph_system()
 	real_world_side.z=20.0f;
 
 	sph=new SPHSystem();
-	sph->init_system();
+	sph->init_system(".\\output");
 
 	sph_timer=new Timer();
 	window_title=(char *)malloc(sizeof(char)*50);
@@ -330,6 +329,7 @@ void display_func()
     glRotatef(yRot, 0.0f, 1.0f, 0.0f);
 
 	sph->animation();
+	sph->partio_file_output();
 
 	glUseProgram(p);
 	render_particles();

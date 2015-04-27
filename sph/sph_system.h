@@ -24,6 +24,8 @@
 
 #include "sph_type.h"
 #include "slef_def.h"
+#include <string>
+
 
 class Particle
 {
@@ -111,9 +113,10 @@ public:
 	SPHSystem();
 	~SPHSystem();
 	void animation();
-	void init_system();
+	void init_system(std::string file_path);
 	void add_particle(float3 pos, float3 vel, float T);
 	void add_heatSource(float3 pos, float T);
+	void partio_file_output();
 
 private:
 	void build_table();
@@ -130,6 +133,8 @@ private:
 private:
 	int3 calc_cell_pos(float3 p);
 	uint calc_cell_hash(int3 cell_pos);
+	std::string output_file_path;
+	int frame_number;
 };
 
 #endif
