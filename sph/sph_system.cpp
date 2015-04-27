@@ -22,10 +22,13 @@
 #include "sph_system.h"
 #include "sph_header.h"
 
+#include "Partio.h"
+#include <sstream>
 #include<iostream>
 using namespace std;
 SPHSystem::SPHSystem()
 {
+	frame_number = 0;
 	max_particle=30000;
 	num_particle=0;
 
@@ -93,11 +96,14 @@ int tt = 0;
 
 void SPHSystem::animation()
 {
+
 	//tt++;
 	if(sys_running == 0)
 	{
 		return;
 	}
+	++frame_number;
+
 	float3 pos,vel;
 	//pos.x = 0;
 	pos.y = world_size.y;
@@ -125,7 +131,7 @@ void SPHSystem::animation()
 
 }
 
-void SPHSystem::init_system()
+void SPHSystem::init_system(std::string file_path)
 {
 	float3 pos;
 	float3 vel;
@@ -140,31 +146,46 @@ void SPHSystem::init_system()
 
 	add_heatSource(pos, 400);
 
-	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.3f; pos.x+=(kernel*0.5f))
-		for(pos.y=world_size.y*0.3f; pos.y<world_size.y*0.8f; pos.y+=(kernel*0.5f))
+	//for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.3f; pos.x+=(kernel*0.5f))
+	//	for(pos.y=world_size.y*0.3f; pos.y<world_size.y*0.8f; pos.y+=(kernel*0.5f))
+	//	{
+	//		for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.4f; pos.z+=(kernel*0.5f))
+	//		{
+	//			add_particle(pos, vel, 200);
+	//		}
+	//	}
+	//for(pos.x=world_size.x*0.3f+kernel*0.5f; pos.x<world_size.x*0.5f; pos.x+=(kernel*0.5f))//x*0.3,x*0.4
+	//		for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.4f; pos.z+=(kernel*0.5f))
+	//		{
+	//			for(pos.y=world_size.y*0.5f; pos.y<world_size.y*0.6f; pos.y+=(kernel*0.5f))
+	//	{
+	//			add_particle(pos, vel,200);
+	//		}
+	//	}
+	//for(pos.x=world_size.x*0.5f+kernel*0.5f; pos.x<world_size.x*0.65f; pos.x+=(kernel*0.5f))
+	//	for(pos.y=world_size.y*0.3f; pos.y<world_size.y*0.8f; pos.y+=(kernel*0.5f))
+	//	{
+	//		for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.4f; pos.z+=(kernel*0.5f))
+	//		{
+	//			add_particle(pos, vel,200);
+	//		}
+	//	}
+
+	for(pos.x=world_size.x*0.2f; pos.x<world_size.x*0.6f; pos.x+=(kernel*0.5f))
+	{
+		for(pos.y=world_size.y*0.3f; pos.y<world_size.y*0.9f; pos.y+=(kernel*0.5f))
 		{
-			for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.4f; pos.z+=(kernel*0.5f))
+			for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.6f; pos.z+=(kernel*0.5f))
 			{
 				add_particle(pos, vel, 200);
 			}
 		}
-	for(pos.x=world_size.x*0.3f+kernel*0.5f; pos.x<world_size.x*0.5f; pos.x+=(kernel*0.5f))//x*0.3,x*0.4
-			for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.4f; pos.z+=(kernel*0.5f))
-			{
-				for(pos.y=world_size.y*0.5f; pos.y<world_size.y*0.6f; pos.y+=(kernel*0.5f))
-		{
-				add_particle(pos, vel,200);
-			}
-		}
-	for(pos.x=world_size.x*0.5f+kernel*0.5f; pos.x<world_size.x*0.65f; pos.x+=(kernel*0.5f))
-		for(pos.y=world_size.y*0.3f; pos.y<world_size.y*0.8f; pos.y+=(kernel*0.5f))
-		{
-			for(pos.z=world_size.z*0.2f; pos.z<world_size.z*0.4f; pos.z+=(kernel*0.5f))
-			{
-				add_particle(pos, vel,200);
-			}
-		}
+	}
+
 	printf("Init Particle: %u\n", num_particle);
+
+	//Set the output path for the output files
+	output_file_path = file_path;
 }
 
 void SPHSystem::add_particle(float3 pos, float3 vel, float T)
@@ -747,6 +768,68 @@ uint SPHSystem::calc_cell_hash(int3 cell_pos)
 
 	return ((uint)(cell_pos.z))*grid_size.y*grid_size.x + ((uint)(cell_pos.y))*grid_size.x + (uint)(cell_pos.x);
 }
+
+//Function that generates a file with all particle information
+void SPHSystem::partio_file_output()
+{
+	//If animation is not running yet
+	if(sys_running == 0)
+	{
+		return;
+	}
+
+	//build the file name which is frame + frame_number + ext
+	std::string frame_str = "frame";
+
+	//Convert from int to string using stringstream
+	std::stringstream frame_number_str;
+	frame_number_str << frame_number;
+
+	std::string ext_str = ".bgeo";
+
+	std::string file_string = output_file_path + "\\" + frame_str + frame_number_str.str() + ext_str;
+
+	//Create partio object
+	Partio::ParticlesDataMutable *partio_data = Partio::create();
+	
+	//Set the number of particles
+	partio_data->addParticles(num_particle);
+
+	//Create attribute varibles
+	Partio::ParticleAttribute position_attribute = partio_data->addAttribute("position", Partio::VECTOR, 3);
+	Partio::ParticleAttribute velocity_attribute = partio_data->addAttribute("v", Partio::VECTOR, 3);
+	Partio::ParticleAttribute id_attribute		 = partio_data->addAttribute("id", Partio::INT, 1);
+
+	Particle *p;
+	//Loop through the particles and set the attributes
+	for(int i = 0; i < num_particle; ++i)
+	{
+		p=&(mem[i]);
+
+		//Set the position in the partio object
+		float* pos = partio_data->dataWrite<float>(position_attribute, i);
+		pos[0] = p->pos.x *10;
+		pos[1] = p->pos.y *10;
+		pos[2] = p->pos.z *10;
+
+		//Set the velocity in the partio object
+		float* v = partio_data->dataWrite<float>(velocity_attribute, i);
+		v[0] = p->vel.x;
+		v[1] = p->vel.y;
+		v[2] = p->vel.z;
+
+		//Set the id of the particle
+		int* id = partio_data->dataWrite<int>(id_attribute, i);
+		id[0] = i;
+	}
+
+	//Write out the file
+	Partio::write(file_string.c_str(), *partio_data);
+	
+	partio_data->release();	
+	
+}
+
 void Particle::CalcParticleColor()
 {
 	float dv = MAX_T - MIN_T;
